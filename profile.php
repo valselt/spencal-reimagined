@@ -31,7 +31,9 @@ if (isset($_POST['update_profile'])) {
             imagedestroy($image);
 
             $timestamp = date('Y-m-d_H-i-s');
-            $s3_key = "spencal/photoprofile/{$timestamp}_{$user_id}.webp";
+            
+            // PERBAIKAN DI SINI: Hapus 'spencal/' di depan agar tidak double folder
+            $s3_key = "photoprofile/{$timestamp}_{$user_id}.webp";
 
             try {
                 $result = $s3->putObject([
@@ -299,30 +301,25 @@ $user_data = $u_res->fetch_assoc();
 <script>
     // --- 1. DETEKSI UNSAVED CHANGES & INTERCEPT LINK ---
     let formChanged = false;
-    let targetUrl = ''; // Menyimpan URL tujuan saat user klik link
+    let targetUrl = ''; 
     const form = document.getElementById('profileForm');
     
-    // Deteksi perubahan pada form
     form.addEventListener('change', () => formChanged = true);
     form.addEventListener('input', () => formChanged = true);
 
-    // Mencegat semua klik pada link (a) di halaman
     document.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', function(e) {
-            // Jika form berubah DAN link bukan javascript/kosong
             if (formChanged) {
                 const href = this.getAttribute('href');
-                // Abaikan jika link kosong atau anchor lokal
                 if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
 
-                e.preventDefault(); // Stop navigasi
-                targetUrl = href;   // Simpan tujuan
-                showUnsavedModal(); // Tampilkan Popup
+                e.preventDefault(); 
+                targetUrl = href;   
+                showUnsavedModal(); 
             }
         });
     });
 
-    // Peringatan Bawaan Browser (Untuk Refresh / Close Tab - Tidak bisa dicustom)
     window.addEventListener('beforeunload', function (e) {
         if (formChanged) {
             e.preventDefault();
@@ -330,10 +327,8 @@ $user_data = $u_res->fetch_assoc();
         }
     });
 
-    // Reset flag jika form disubmit
     form.addEventListener('submit', () => formChanged = false);
 
-    // --- LOGIC MODAL UNSAVED ---
     function showUnsavedModal() {
         const modal = document.getElementById('unsavedChangesModal');
         modal.style.display = 'flex';
@@ -347,13 +342,12 @@ $user_data = $u_res->fetch_assoc();
     }
 
     function leavePage() {
-        // Abaikan perubahan dan pergi ke URL tujuan
         formChanged = false; 
         window.location.href = targetUrl;
     }
 
 
-    // --- 2. LOGIC CROP IMAGE (SAMA SEPERTI SEBELUMNYA) ---
+    // --- 2. LOGIC CROP IMAGE ---
     let cropper;
     const fileInput = document.getElementById('hidden-file-input');
     const imageToCrop = document.getElementById('image-to-crop');
@@ -387,7 +381,7 @@ $user_data = $u_res->fetch_assoc();
         if(placeholder) placeholder.style.display = 'none';
 
         document.getElementById('cropped_image_data').value = base64Image;
-        formChanged = true; // Tandai berubah saat ganti foto
+        formChanged = true; 
         closeCropModal();
     }
 
