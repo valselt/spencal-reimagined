@@ -28,7 +28,15 @@ if (isset($_POST['submit_transaksi'])) {
 
     $stmt = $conn->prepare("INSERT INTO transactions (user_id, category_id, date, note, amount) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("iissd", $user_id, $cat_id, $tgl, $note, $amount);
-    $stmt->execute();
+    if($stmt->execute()){
+        // SUKSES
+        $_SESSION['popup_status'] = 'success';
+        $_SESSION['popup_message'] = 'Transaksi berhasil disimpan!';
+    } else {
+        // GAGAL
+        $_SESSION['popup_status'] = 'error';
+        $_SESSION['popup_message'] = 'Gagal menyimpan transaksi.';
+    }
     
     // --- SOLUSI: REDIRECT SETELAH POST ---
     header("Location: index.php"); 
@@ -397,5 +405,6 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     updateSubJenis();
 </script>
 
+<?php include 'popupcustom.php'; ?>
 </body>
 </html>

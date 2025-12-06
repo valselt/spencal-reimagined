@@ -18,11 +18,19 @@ if (isset($_POST['login'])) {
             $_SESSION['user_id'] = $row['id'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['email'] = $row['email'];
-            header("Location: ../index.php"); // Redirect ke Dashboard (Root)
+            
+            // Set Popup Selamat Datang
+            $_SESSION['popup_status'] = 'success';
+            $_SESSION['popup_message'] = 'Login berhasil. Selamat datang kembali!';
+            
+            header("Location: ../index.php");
             exit();
         }
     }
-    $error_login = "Username/Email atau password salah!";
+    
+    // GANTI ERROR MSG BIASA DENGAN POPUP ERROR
+    $_SESSION['popup_status'] = 'error';
+    $_SESSION['popup_message'] = 'Username atau Password salah!';
 }
 ?>
 
@@ -34,14 +42,13 @@ if (isset($_POST['login'])) {
     <title>Masuk - Spencal</title>
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
     <link rel="stylesheet" href="../style.css"> </head>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <body>
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-brand">spencal<span>.</span></div>
             <h4 class="auth-title">Masuk ke akun Anda</h4>
             
-            <?php if(isset($error_login)) echo "<p class='text-danger' style='margin-bottom:15px;'>$error_login</p>"; ?>
-
             <form method="POST" style="text-align:left;">
                 <div class="form-group">
                     <label class="form-label">Username atau Email</label>
@@ -59,5 +66,7 @@ if (isset($_POST['login'])) {
             </div>
         </div>
     </div>
+
+    <?php include '../popupcustom.php'; ?>
 </body>
 </html>

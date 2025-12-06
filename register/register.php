@@ -37,15 +37,19 @@ if (isset($_POST['register'])) {
     }
 
     if (!$captcha_success) {
-         echo "<script>alert('Verifikasi Robot Gagal! Silakan coba lagi.');</script>";
+         $_SESSION['popup_status'] = 'error';
+         $_SESSION['popup_message'] = 'Verifikasi Robot Gagal! Silakan coba lagi.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-         echo "<script>alert('Format email tidak valid!');</script>";
+         $_SESSION['popup_status'] = 'error';
+         $_SESSION['popup_message'] = 'Format email tidak valid!';
     } elseif(!$uppercase || !$number || !$symbol || strlen($password) < 6) {
-         echo "<script>alert('Password tidak memenuhi syarat!');</script>";
+         $_SESSION['popup_status'] = 'error';
+         $_SESSION['popup_message'] = 'Password tidak memenuhi syarat keamanan!';
     } else {
         $cek = $conn->query("SELECT id FROM users WHERE username='$username' OR email='$email'");
         if($cek->num_rows > 0){
-             echo "<script>alert('Username atau Email sudah terdaftar!');</script>";
+             $_SESSION['popup_status'] = 'error';
+             $_SESSION['popup_message'] = 'Username atau Email sudah terdaftar!';
         } else {
              $password_hash = password_hash($password, PASSWORD_DEFAULT);
              $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
@@ -54,9 +58,15 @@ if (isset($_POST['register'])) {
              if ($stmt->execute()) {
                  $last_id = $conn->insert_id;
                  seedCategories($last_id, $conn);
-                 echo "<script>alert('Registrasi Berhasil! Silakan Login.'); window.location.href='../login/login.php';</script>";
+                 
+                 // SUKSES -> Set Session lalu Redirect ke Login
+                 $_SESSION['popup_status'] = 'success';
+                 $_SESSION['popup_message'] = 'Registrasi Berhasil! Silakan Login.';
+                 header("Location: ../login/login.php"); // Popup akan muncul di halaman Login
+                 exit();
              } else {
-                 echo "<script>alert('Terjadi kesalahan sistem.');</script>";
+                 $_SESSION['popup_status'] = 'error';
+                 $_SESSION['popup_message'] = 'Terjadi kesalahan sistem database.';
              }
         }
     }
@@ -262,5 +272,6 @@ if (isset($_POST['register'])) {
             if(userIn.value.length >= 3) checkAvailability('username', userIn.value);
         });
     </script>
+<?php include '../popupcustom.php'; ?>
 </body>
 </html>

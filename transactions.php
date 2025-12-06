@@ -12,15 +12,26 @@ $username = $_SESSION['username'];
 // --- LOGIC HAPUS TRANSAKSI ---
 if (isset($_GET['delete_id'])) {
     $del_id = $_GET['delete_id'];
-    // Validasi agar user hanya bisa hapus miliknya sendiri
     $stmt = $conn->prepare("DELETE FROM transactions WHERE id = ? AND user_id = ?");
     $stmt->bind_param("ii", $del_id, $user_id);
     
     if ($stmt->execute()) {
-        header("Location: transactions.php?msg=deleted");
+        $_SESSION['popup_status'] = 'success';
+        $_SESSION['popup_message'] = 'Transaksi berhasil dihapus.';
     } else {
-        header("Location: transactions.php?msg=error");
+        $_SESSION['popup_status'] = 'error';
+        $_SESSION['popup_message'] = 'Gagal menghapus transaksi.';
     }
+    header("Location: transactions.php");
+    exit();
+}
+
+// --- LOGIC MENANGKAP PESAN EDIT (Dari edit_transaction.php) ---
+// Jika edit_transaction.php melempar ?msg=updated, kita ubah jadi Session Popup
+if(isset($_GET['msg']) && $_GET['msg'] == 'updated'){
+    $_SESSION['popup_status'] = 'success';
+    $_SESSION['popup_message'] = 'Transaksi berhasil diperbarui.';
+    header("Location: transactions.php"); // Refresh lagi untuk bersihkan URL
     exit();
 }
 
@@ -157,5 +168,6 @@ $result = $conn->query($query);
     </main>
 </div>
 
+<?php include 'popupcustom.php'; ?>
 </body>
 </html>

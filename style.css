@@ -771,3 +771,35 @@ ul { list-style: none; }
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+
+/* --- CROPPER MODAL STYLES --- */
+.crop-container {
+    max-height: 400px; /* Batas tinggi area crop */
+    background: #333;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Tombol Ganti Foto (Style Baru) */
+.btn-change-photo {
+    background: #f1f5f9;
+    color: var(--text-dark);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    transition: 0.2s;
+}
+.btn-change-photo:hover { background: #e2e8f0; }
+.btn-change-photo i { font-size: 1rem; }
+
+/* Sembunyikan Input File Asli */
+#hidden-file-input { display: none; }
+
