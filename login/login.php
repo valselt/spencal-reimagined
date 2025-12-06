@@ -1,9 +1,9 @@
 <?php
 session_start();
-require '../config.php'; // Naik satu level untuk ambil config
+require '../config.php'; 
 
 if (isset($_SESSION['user_id'])) {
-    header("Location: ../index.php"); // Jika sudah login, lempar ke dashboard
+    header("Location: ../index.php"); 
     exit();
 }
 
@@ -15,29 +15,42 @@ if (isset($_POST['login'])) {
     $result = $conn->query("SELECT * FROM users WHERE username='$user_input' OR email='$user_input'");
     if ($row = $result->fetch_assoc()) {
         if (password_verify($password, $row['password'])) {
+            
+            // --- CEK VERIFIKASI (LOGIC BARU) ---
             if ($row['is_verified'] == 0) {
-                $_SESSION['verify_email'] = $row['email']; // Set session agar bisa verif
-                $_SESSION['popup_status'] = 'error';
-                $_SESSION['popup_message'] = 'Akun belum diverifikasi. Silakan masukkan OTP.';
-                header("Location: ../register/verify.php"); 
+                $_SESSION['verify_email'] = $row['email'];
+                
+                // Set Session untuk Popup Warning + Redirect
+                $_SESSION['popup_status'] = 'warning'; // Warna Kuning
+                $_SESSION['popup_title'] = 'Auth Failed'; // Judul Custom
+                $_SESSION['popup_message'] = 'Akun belum diverifikasi. Anda Akan dialihkan ke tab Verify OTP';
+                $_SESSION['popup_redirect'] = '../register/verify.php'; // Trigger Countdown
+                
+                // JANGAN pakai header location disini, biarkan script lanjut ke bawah 
+                // agar HTML ter-load dan popup muncul.
+            } 
+            else {
+                // Login Sukses Normal
+                $_SESSION['user_id'] = $row['id'];
+                $_SESSION['username'] = $row['username'];
+                $_SESSION['email'] = $row['email'];
+                
+                $_SESSION['popup_status'] = 'success';
+                $_SESSION['popup_message'] = 'Login berhasil. Selamat datang kembali!';
+                
+                header("Location: ../index.php");
                 exit();
             }
-            $_SESSION['user_id'] = $row['id'];
-            $_SESSION['username'] = $row['username'];
-            $_SESSION['email'] = $row['email'];
-            
-            // Set Popup Selamat Datang
-            $_SESSION['popup_status'] = 'success';
-            $_SESSION['popup_message'] = 'Login berhasil. Selamat datang kembali!';
-            
-            header("Location: ../index.php");
-            exit();
+        } else {
+            // Password Salah
+            $_SESSION['popup_status'] = 'error';
+            $_SESSION['popup_message'] = 'Username atau Password salah!';
         }
+    } else {
+        // User Tidak Ditemukan
+        $_SESSION['popup_status'] = 'error';
+        $_SESSION['popup_message'] = 'Username atau Password salah!';
     }
-    
-    // GANTI ERROR MSG BIASA DENGAN POPUP ERROR
-    $_SESSION['popup_status'] = 'error';
-    $_SESSION['popup_message'] = 'Username atau Password salah!';
 }
 ?>
 
@@ -48,8 +61,10 @@ if (isset($_POST['login'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - Spencal</title>
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
-    <link rel="stylesheet" href="../style.css"> </head>
+    
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../style.css"> 
+</head>
 <body>
     <div class="auth-container">
         <div class="auth-card">

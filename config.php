@@ -1,11 +1,12 @@
 <?php
 date_default_timezone_set('Asia/Jakarta');
 // Load Composer Autoload (Pastikan path ini benar di Docker)
-require 'vendor/autoload.php'; 
+require __DIR__ . '/vendor/autoload.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
 
 // ==========================================
 // KONSENTRASI DATA RAHASIA
@@ -66,9 +67,9 @@ function seedCategories($userId, $conn) {
 
 // --- KONFIGURASI EMAIL (SMTP GMAIL) ---
 $mail_host = 'smtp.gmail.com';
-$mail_port = 587; // TLS
-$mail_user = 'valseltalt@gmail.com'; // Ganti Email Anda
-$mail_pass = 'cryw pkpa chai pefm';  // Ganti App Password (16 digit)
+$mail_port = 587; 
+$mail_user = 'valseltalt@gmail.com'; 
+$mail_pass = 'cryw pkpa chai pefm';  
 $mail_from_name = 'Spencal by Valselt';
 
 // --- FUNGSI KIRIM EMAIL ---
@@ -77,6 +78,10 @@ function sendOTPEmail($toEmail, $otp) {
     
     $mail = new PHPMailer(true);
     try {
+        // --- DEBUGGING (HAPUS JIKA SUDAH BERHASIL) ---
+        // $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Uncomment baris ini jika masih gagal untuk melihat log lengkap
+        // $mail->Debugoutput = 'html';
+
         $mail->isSMTP();
         $mail->Host       = $mail_host;
         $mail->SMTPAuth   = true;
@@ -91,19 +96,27 @@ function sendOTPEmail($toEmail, $otp) {
         $mail->isHTML(true);
         $mail->Subject = "Kode Verifikasi OTP Spencal";
         $mail->Body    = "
-            <h3>Halo!</h3>
-            <p>Terima kasih telah mendaftar di Spencal.</p>
-            <p>Kode OTP Anda adalah: <b style='font-size: 20px; color: #4f46e5;'>$otp</b></p>
-            <p>Kode ini berlaku selama 10 menit.</p>
+            <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                <h2 style='color: #4f46e5;'>Halo!</h2>
+                <p>Terima kasih telah mendaftar di Spencal.</p>
+                <p>Kode OTP Anda adalah:</p>
+                <h1 style='color: #4f46e5; letter-spacing: 5px;'>$otp</h1>
+                <p>Kode ini berlaku selama 10 menit.</p>
+                <hr>
+                <small>Jika Anda tidak merasa mendaftar, abaikan email ini.</small>
+            </div>
         ";
 
         $mail->send();
         return true;
     } catch (Exception $e) {
+        // --- PERBAIKAN 2: Tampilkan Error Asli di Popup ---
+        // Kita tidak bisa melihat error di F12 karena ini PHP (Server Side)
+        // Kita simpan error ke Session agar muncul di Popup Browser
+        if(session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['popup_status'] = 'error';
+        $_SESSION['popup_message'] = "Mailer Error: " . $mail->ErrorInfo; 
         return false;
     }
 }
-
-
-
 ?>

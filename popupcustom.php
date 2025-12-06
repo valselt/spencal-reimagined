@@ -1,18 +1,28 @@
 <?php
-// Cek apakah ada pesan popup di session
 if (isset($_SESSION['popup_status']) && isset($_SESSION['popup_message'])) {
-    $status = $_SESSION['popup_status']; // 'success' atau 'error'
+    $status = $_SESSION['popup_status']; 
     $message = $_SESSION['popup_message'];
     
-    // Tentukan Ikon & Judul
+    // Cek apakah ada judul custom, jika tidak pakai default
+    $title = isset($_SESSION['popup_title']) ? $_SESSION['popup_title'] : '';
+    
+    // Cek apakah ada request redirect otomatis
+    $redirect = isset($_SESSION['popup_redirect']) ? $_SESSION['popup_redirect'] : null;
+
+    // Tentukan Ikon & Style berdasarkan Status
     if ($status == 'success') {
         $icon = "<i class='bx bx-check'></i>";
-        $title = "Berhasil!";
+        if(empty($title)) $title = "Berhasil!";
         $btn_text = "Lanjutkan";
         $btn_class = "success";
+    } elseif ($status == 'warning') {
+        $icon = "<i class='bx bx-error'></i>"; // Tanda Seru
+        if(empty($title)) $title = "Peringatan!";
+        $btn_text = "Tutup";
+        $btn_class = "warning";
     } else {
         $icon = "<i class='bx bx-x'></i>";
-        $title = "Gagal!";
+        if(empty($title)) $title = "Gagal!";
         $btn_text = "Coba Lagi";
         $btn_class = "error";
     }
@@ -24,7 +34,10 @@ if (isset($_SESSION['popup_status']) && isset($_SESSION['popup_message'])) {
             </div>
             <h3 class="popup-title"><?php echo $title; ?></h3>
             <p class="popup-message"><?php echo $message; ?></p>
-            <button onclick="closePopup()" class="popup-btn <?php echo $btn_class; ?>"><?php echo $btn_text; ?></button>
+            
+            <button onclick="closePopup()" id="popupBtn" class="popup-btn <?php echo $btn_class; ?>">
+                <?php echo $btn_text; ?>
+            </button>
         </div>
     </div>
 
@@ -36,10 +49,36 @@ if (isset($_SESSION['popup_status']) && isset($_SESSION['popup_message'])) {
                 popup.remove();
             }, 300);
         }
+
+        // --- LOGIC AUTO REDIRECT (COUNTDOWN) ---
+        <?php if ($redirect): ?>
+        document.addEventListener("DOMContentLoaded", function() {
+            let seconds = 5; // Waktu hitung mundur
+            const btn = document.getElementById('popupBtn');
+            const targetUrl = "<?php echo $redirect; ?>";
+
+            // Disable tombol agar user notice ini otomatis
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            btn.innerText = `Dialihkan dalam ${seconds}...`;
+
+            const interval = setInterval(() => {
+                seconds--;
+                btn.innerText = `Dialihkan dalam ${seconds}...`;
+
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    window.location.href = targetUrl;
+                }
+            }, 1000);
+        });
+        <?php endif; ?>
     </script>
 <?php
-    // Hapus session agar popup tidak muncul lagi saat refresh
+    // Bersihkan semua session popup setelah ditampilkan
     unset($_SESSION['popup_status']);
     unset($_SESSION['popup_message']);
+    unset($_SESSION['popup_title']);
+    unset($_SESSION['popup_redirect']);
 }
 ?>
