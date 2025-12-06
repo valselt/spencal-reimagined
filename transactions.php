@@ -3,7 +3,7 @@ session_start();
 require 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login/login.php"); exit();
+    header("Location: logout.php"); exit();
 }
 
 $user_id = $_SESSION['user_id'];
@@ -74,7 +74,7 @@ $result = $conn->query($query);
         </div>
 
         <?php 
-            $q_user = $conn->query("SELECT profile_pic FROM users WHERE id='$user_id'");
+            $q_user = $conn_valselt->query("SELECT profile_pic FROM users WHERE id='$user_id'");
             $u_data = $q_user->fetch_assoc();
             $pic_url = $u_data['profile_pic'];
         ?>

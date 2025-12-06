@@ -98,7 +98,7 @@ if (isset($_GET['del_cat'])) {
     }
 }
 
-$u_res = $conn->query("SELECT * FROM users WHERE id='$user_id'");
+$u_res = $conn_valselt->query("SELECT * FROM users WHERE id='$user_id'");
 $user_data = $u_res->fetch_assoc();
 ?>
 
@@ -159,58 +159,9 @@ $user_data = $u_res->fetch_assoc();
             </div>
 
             <div id="EditProfil" class="tab-content" style="display: block;">
-                <form action="profile.php" method="POST" id="profileForm">
-                    <input type="hidden" name="cropped_image" id="cropped_image_data">
-                    
-                    <div class="profile-flex-container">
-                        <div class="profile-avatar-section">
-                            <?php if($user_data['profile_pic']): ?>
-                                <img src="<?php echo $user_data['profile_pic']; ?>" id="main-preview" class="profile-pic-preview" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">
-                            <?php else: ?>
-                                <div id="main-preview-placeholder" class="profile-pic-preview" style="background:var(--primary); width:100px; height:100px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; margin:0 auto;">
-                                    <?php echo strtoupper(substr($user_data['username'], 0, 2)); ?>
-                                </div>
-                                <img src="" id="main-preview" style="display:none; width:100px; height:100px; border-radius:50%; object-fit:cover; margin: 0 auto;">
-                            <?php endif; ?>
-                            
-                            <input type="file" id="hidden-file-input" accept="image/png, image/jpeg, image/jpg">
-                            
-                            <div style="text-align:center;">
-                                <button type="button" class="btn-change-photo" onclick="document.getElementById('hidden-file-input').click()">
-                                    <i class='bx bx-pencil'></i> Ganti
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="profile-form-section">
-                            <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <input type="text" name="username" class="form-control" value="<?php echo htmlspecialchars($user_data['username']); ?>" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user_data['email']); ?>" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Password Baru</label>
-                                <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah password">
-                            </div>
-
-                            <button type="submit" name="update_profile" class="btn btn-primary" style="width:auto; padding: 12px 25px;"><i class='bx bx-save'></i> Simpan Perubahan</button>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="danger-zone">
-                    <div class="danger-title"><i class='bx bx-error-circle'></i> Zona Berbahaya</div>
-                    <p class="danger-desc">Menghapus akun akan menghilangkan semua data transaksi...</p>
-                    <form method="POST" id="deleteForm">
-                        <button type="button" onclick="showDeleteConfirm()" class="btn-danger"><i class='bx bx-trash'></i> Hapus Akun Saya Permanen</button>
-                        <input type="hidden" name="delete_account" value="1">
-                    </form>
-                </div>
+                <a href="https://valseltid.ivanaldorino.web.id/index.php" class="btn btn-primary" target="_blank">
+                    Edit Profil & Ganti Foto di Valselt ID <i class='bx bx-link-external'></i>
+                </a>
             </div>
 
             <div id="AturKategori" class="tab-content" style="display: none;">
