@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    container_name: spencal_app
+    ports:
+      - "1649:80" # Akses website nanti di localhost:1649
+    volumes:
+      - .:/var/www/html # Sinkronisasi folder (Edit file di Windows, langsung berubah di Docker)
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Jaga-jaga jika IP server ada di host komputer
