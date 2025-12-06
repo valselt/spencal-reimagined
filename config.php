@@ -15,7 +15,8 @@ use PHPMailer\PHPMailer\SMTP;
 // 1. Database
 $db_host = '100.115.160.110';
 $db_port = 3306;
-$db_name = 'spencal_reimagined';
+$db_name_spencal = 'spencal_reimagined';
+$db_name_valselt = 'valselt_id';
 $db_user = 'root';
 $db_pass = 'aldorino04';
 
@@ -33,8 +34,13 @@ $recaptcha_secret_key = '6LdEEyMsAAAAADK5A1RXPIHpHTi2lwx5CdnORfwB';
 // KONEKSI & HELPER
 // ==========================================
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
-if ($conn->connect_error) die("Koneksi Database Gagal.");
+// --- KONEKSI 1: APLIKASI SPENCAL ---
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name_spencal, $db_port);
+if ($conn->connect_error) die("Koneksi Spencal Gagal: " . $conn->connect_error);
+
+// --- KONEKSI 2: AKUN VALSELT (GLOBAL) ---
+$conn_valselt = new mysqli($db_host, $db_user, $db_pass, $db_name_valselt, $db_port);
+if ($conn_valselt->connect_error) die("Koneksi Valselt ID Gagal: " . $conn_valselt->connect_error);
 
 // Inisialisasi S3 Client (MinIO)
 try {

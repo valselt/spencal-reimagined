@@ -9,10 +9,10 @@ if (isset($_SESSION['user_id'])) {
 
 // --- PROSES LOGIN ---
 if (isset($_POST['login'])) {
-    $user_input = $conn->real_escape_string($_POST['user_input']);
+    $user_input = $conn_valselt->real_escape_string($_POST['user_input']);
     $password = $_POST['password'];
     
-    $result = $conn->query("SELECT * FROM users WHERE username='$user_input' OR email='$user_input'");
+    $result = $conn_valselt->query("SELECT * FROM users WHERE username='$user_input' OR email='$user_input'");
     if ($row = $result->fetch_assoc()) {
         if (password_verify($password, $row['password'])) {
             

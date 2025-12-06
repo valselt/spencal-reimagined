@@ -46,7 +46,7 @@ if (isset($_POST['register'])) {
          $_SESSION['popup_status'] = 'error';
          $_SESSION['popup_message'] = 'Password tidak memenuhi syarat keamanan!';
     } else {
-        $cek = $conn->query("SELECT id FROM users WHERE username='$username' OR email='$email'");
+        $cek = $conn_valselt->query("SELECT id FROM users WHERE username='$username' OR email='$email'");
         if($cek->num_rows > 0){
              $_SESSION['popup_status'] = 'error';
              $_SESSION['popup_message'] = 'Username atau Email sudah terdaftar!';
@@ -58,11 +58,11 @@ if (isset($_POST['register'])) {
              $expiry = date('Y-m-d H:i:s', strtotime('+10 minutes')); // Expire 10 menit
 
              // 2. INSERT USER (VERIFIED = 0)
-             $stmt = $conn->prepare("INSERT INTO users (username, email, password, otp, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, 0)");
+             $stmt = $conn_valselt->prepare("INSERT INTO users (username, email, password, otp, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, 0)");
              $stmt->bind_param("sssss", $username, $email, $password_hash, $otp, $expiry);
              
              if ($stmt->execute()) {
-                 $last_id = $conn->insert_id;
+                 $last_id = $conn_valselt->insert_id;
                  seedCategories($last_id, $conn); // Isi kategori default
                  
                  // 3. KIRIM EMAIL

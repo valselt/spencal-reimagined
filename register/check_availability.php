@@ -17,7 +17,7 @@ if (isset($data['type']) && isset($data['value'])) {
     }
 
     $query = "SELECT id FROM users WHERE $type = '$value'";
-    $result = $conn->query($query);
+    $result = $conn_valselt->query($query);
 
     if ($result->num_rows > 0) {
         // Sudah ada (Tidak Tersedia)
