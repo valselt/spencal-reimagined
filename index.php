@@ -19,35 +19,33 @@ $total_hari_bulan_ini = date('t');
 $hari_ini_angka = date('j'); 
 $sisa_hari = $total_hari_bulan_ini - $hari_ini_angka + 1; 
 
-// --- PROSES INPUT TRANSAKSI ---
+// --- PROSES INPUT TRANSAKSI (DENGAN PRG PATTERN) ---
 if (isset($_POST['submit_transaksi'])) {
     $tgl = $_POST['tanggal'];
     $cat_id = $_POST['sub_jenis'];
     $note = htmlspecialchars($_POST['catatan']);
-    
-    // PERBAIKAN 1: Hapus titik dari input format rupiah sebelum simpan ke DB
-    // "1.000.000" menjadi "1000000"
     $amount = str_replace('.', '', $_POST['total']); 
 
     $stmt = $conn->prepare("INSERT INTO transactions (user_id, category_id, date, note, amount) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("iissd", $user_id, $cat_id, $tgl, $note, $amount);
     $stmt->execute();
+    
+    // --- SOLUSI: REDIRECT SETELAH POST ---
+    header("Location: index.php"); 
+    exit(); 
 }
 
-// --- QUERY DATA STATISTIK (CARD ATAS) ---
-// Pengeluaran Hari Ini
+// --- QUERY DATA STATISTIK HARIAN ---
 $q_daily_out = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND t.date = '$today'");
 $daily_out = $q_daily_out->fetch_assoc()['total'] ?? 0;
 
-// Pemasukan Hari Ini
 $q_daily_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND t.date = '$today'");
 $daily_in = $q_daily_in->fetch_assoc()['total'] ?? 0;
 
-// Pemasukan Bulan Ini (Total)
+// --- QUERY DATA STATISTIK BULANAN ---
 $q_month_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year'");
 $month_in = $q_month_in->fetch_assoc()['total'] ?? 0;
 
-// Pengeluaran Bulan Ini (Total)
 $q_month_out = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year'");
 $month_out = $q_month_out->fetch_assoc()['total'] ?? 0;
 
@@ -63,10 +61,9 @@ if ($sisa_hari > 0) {
 $sisa_bisa_pakai_hari_ini = $jatah_hari_ini - $daily_out;
 
 
-// --- PERBAIKAN 2: QUERY DATA UNTUK PIE CHART (GROUP BY KATEGORI) ---
-
-// A. Data Pie Chart Pemasukan
-$query_pie_in = $conn->query("SELECT c.name, SUM(t.amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year' GROUP BY c.name");
+// --- QUERY DATA PIE CHART ---
+// A. Pemasukan
+$query_pie_in = $conn->query("SELECT c.name, SUM(t.amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year' GROUP BY c.name ORDER BY total DESC");
 $label_pie_in = [];
 $data_pie_in = [];
 while($row = $query_pie_in->fetch_assoc()){
@@ -74,8 +71,8 @@ while($row = $query_pie_in->fetch_assoc()){
     $data_pie_in[] = $row['total'];
 }
 
-// B. Data Pie Chart Pengeluaran
-$query_pie_out = $conn->query("SELECT c.name, SUM(t.amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year' GROUP BY c.name");
+// B. Pengeluaran
+$query_pie_out = $conn->query("SELECT c.name, SUM(t.amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year' GROUP BY c.name ORDER BY total DESC");
 $label_pie_out = [];
 $data_pie_out = [];
 while($row = $query_pie_out->fetch_assoc()){
@@ -94,25 +91,39 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Keuangan - Spencal</title>
+    <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Styling Layout Baru */
-        .input-section {
-            margin-bottom: 30px;
-        }
+        .input-section { margin-bottom: 20px; }
         
         .charts-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 2 Kolom Seimbang */
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
+        .monthly-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px; 
+        }
+
+        .stat-card-monthly {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid var(--primary); 
+        }
+        .stat-card-monthly h4 { margin: 0 0 10px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;}
+        .stat-card-monthly .val { font-size: 1.5rem; font-weight: 700; }
+
         @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr; /* Stack di HP */
-            }
+            .charts-grid { grid-template-columns: 1fr; }
         }
 
         .chart-wrapper {
@@ -133,6 +144,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             </div>
             <ul class="sidebar-menu">
                 <li><a href="index.php" class="menu-item active"><i class='bx bxs-dashboard'></i> Dashboard</a></li>
+                <li><a href="transactions.php" class="menu-item"><i class='bx bx-list-ul'></i> Riwayat Transaksi</a></li>
             </ul>
         </div>
 
@@ -181,13 +193,14 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 </small>
             </div>
             <div class="card stat-card">
-                <h3>Pengeluaran Hari Ini</h3>
-                <div class="value text-danger">Rp <?php echo number_format($daily_out, 0, ',', '.'); ?></div>
-            </div>
-            <div class="card stat-card">
                 <h3>Pemasukan Hari Ini</h3>
                 <div class="value text-success">Rp <?php echo number_format($daily_in, 0, ',', '.'); ?></div>
             </div>
+            <div class="card stat-card">
+                <h3>Pengeluaran Hari Ini</h3>
+                <div class="value text-danger">Rp <?php echo number_format($daily_out, 0, ',', '.'); ?></div>
+            </div>
+            
         </div>
 
         <div class="input-section">
@@ -227,6 +240,24 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                     <button type="submit" name="submit_transaksi" class="btn btn-primary">Simpan Transaksi</button>
                 </form>
             </div>
+        </div>
+
+        <div class="monthly-stats-grid">
+            <div class="stat-card-monthly" style="border-left-color: #4f46e5;">
+                <h4>Total Uang Bulan Ini</h4>
+                <div class="val <?php echo ($saldo_bulan_ini < 0) ? 'text-danger' : 'text-primary'; ?>">
+                    Rp <?php echo number_format($saldo_bulan_ini, 0, ',', '.'); ?>
+                </div>
+            </div>
+            <div class="stat-card-monthly" style="border-left-color: #22c55e;">
+                <h4>Pemasukan Bulan Ini</h4>
+                <div class="val text-success">Rp <?php echo number_format($month_in, 0, ',', '.'); ?></div>
+            </div>
+            <div class="stat-card-monthly" style="border-left-color: #ef4444;">
+                <h4>Pengeluaran Bulan Ini</h4>
+                <div class="val text-danger">Rp <?php echo number_format($month_out, 0, ',', '.'); ?></div>
+            </div>
+            
         </div>
 
         <div class="charts-grid">
@@ -274,14 +305,21 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         element.value = rupiah;
     }
 
-    // --- 2. JS COLOR GENERATOR (Warna Otomatis) ---
-    function generateColors(count) {
+    // --- 2. JS COLOR GENERATOR (SHADES) ---
+    function generateGreenShades(count) {
         let colors = [];
-        let hueStep = 360 / count;
         for (let i = 0; i < count; i++) {
-            // Gunakan HSL agar warna cerah dan berbeda
-            let hue = i * hueStep;
-            colors.push(`hsl(${hue}, 70%, 60%)`);
+            let lightness = 35 + (i * (50 / Math.max(count, 1))); 
+            colors.push(`hsl(132, 60%, ${lightness}%)`);
+        }
+        return colors;
+    }
+
+    function generateRedShades(count) {
+        let colors = [];
+        for (let i = 0; i < count; i++) {
+            let lightness = 45 + (i * (45 / Math.max(count, 1))); 
+            colors.push(`hsl(350, 75%, ${lightness}%)`);
         }
         return colors;
     }
@@ -295,8 +333,9 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             labels: <?php echo json_encode($label_pie_in); ?>,
             datasets: [{
                 data: <?php echo json_encode($data_pie_in); ?>,
-                backgroundColor: generateColors(<?php echo count($data_pie_in); ?>),
-                borderWidth: 1
+                backgroundColor: generateGreenShades(<?php echo count($data_pie_in); ?>),
+                borderWidth: 1,
+                borderColor: '#ffffff'
             }]
         },
         options: {
@@ -318,8 +357,9 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             labels: <?php echo json_encode($label_pie_out); ?>,
             datasets: [{
                 data: <?php echo json_encode($data_pie_out); ?>,
-                backgroundColor: generateColors(<?php echo count($data_pie_out); ?>),
-                borderWidth: 1
+                backgroundColor: generateRedShades(<?php echo count($data_pie_out); ?>),
+                borderWidth: 1,
+                borderColor: '#ffffff'
             }]
         },
         options: {

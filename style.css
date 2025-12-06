@@ -1,5 +1,4 @@
-/* Import Font Inter Tight */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
 :root {
     --sidebar-bg: #0f172a;  /* Warna Sidebar Gelap */
@@ -24,7 +23,7 @@
 }
 
 body {
-    font-family: 'Inter Tight', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     background: var(--bg-light);
     color: var(--text-dark);
     height: 100vh;
@@ -260,7 +259,7 @@ ul { list-style: none; }
     padding: 12px 15px;
     border: 1px solid #e2e8f0;
     border-radius: var(--radius-sm);
-    font-family: 'Inter Tight', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     font-size: 0.95rem;
     transition: 0.3s;
     background: #f8fafc;
@@ -532,4 +531,88 @@ ul { list-style: none; }
 }
 @media (min-width: 400px) {
     .g-recaptcha { transform: scale(1.18); transform-origin: center; }
+}
+
+/* --- TRANSACTION HISTORY TABLE STYLES --- */
+.table-container {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    overflow: hidden; /* Agar border radius tabel tidak bocor */
+    border: 1px solid #e2e8f0;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.custom-table thead {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.custom-table th {
+    text-align: left;
+    padding: 15px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.custom-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--text-dark);
+}
+
+.custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+.custom-table tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Badges for Type */
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    display: inline-block;
+}
+.badge.pemasukan {
+    background: #dcfce7;
+    color: #166534;
+}
+.badge.pengeluaran {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Action Buttons in Table */
+.btn-action {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    margin-left: 5px;
+    transition: 0.2s;
+    background: transparent;
+}
+.btn-edit { color: #3b82f6; background: #eff6ff; }
+.btn-edit:hover { background: #dbeafe; color: #1d4ed8; }
+
+.btn-delete { color: #ef4444; background: #fef2f2; }
+.btn-delete:hover { background: #fee2e2; color: #b91c1c; }
+
+/* Responsive Table */
+.table-responsive {
+    overflow-x: auto;
 }
