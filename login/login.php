@@ -15,6 +15,13 @@ if (isset($_POST['login'])) {
     $result = $conn->query("SELECT * FROM users WHERE username='$user_input' OR email='$user_input'");
     if ($row = $result->fetch_assoc()) {
         if (password_verify($password, $row['password'])) {
+            if ($row['is_verified'] == 0) {
+                $_SESSION['verify_email'] = $row['email']; // Set session agar bisa verif
+                $_SESSION['popup_status'] = 'error';
+                $_SESSION['popup_message'] = 'Akun belum diverifikasi. Silakan masukkan OTP.';
+                header("Location: ../register/verify.php"); 
+                exit();
+            }
             $_SESSION['user_id'] = $row['id'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['email'] = $row['email'];

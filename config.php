@@ -5,6 +5,7 @@ require 'vendor/autoload.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
+use PHPMailer\PHPMailer\PHPMailer;
 
 // ==========================================
 // KONSENTRASI DATA RAHASIA
@@ -62,4 +63,47 @@ function seedCategories($userId, $conn) {
         }
     }
 }
+
+// --- KONFIGURASI EMAIL (SMTP GMAIL) ---
+$mail_host = 'smtp.gmail.com';
+$mail_port = 587; // TLS
+$mail_user = 'valseltalt@gmail.com'; // Ganti Email Anda
+$mail_pass = 'cryw pkpa chai pefm';  // Ganti App Password (16 digit)
+$mail_from_name = 'Spencal by Valselt';
+
+// --- FUNGSI KIRIM EMAIL ---
+function sendOTPEmail($toEmail, $otp) {
+    global $mail_host, $mail_port, $mail_user, $mail_pass, $mail_from_name;
+    
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = $mail_host;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $mail_user;
+        $mail->Password   = $mail_pass;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = $mail_port;
+
+        $mail->setFrom($mail_user, $mail_from_name);
+        $mail->addAddress($toEmail);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Kode Verifikasi OTP Spencal";
+        $mail->Body    = "
+            <h3>Halo!</h3>
+            <p>Terima kasih telah mendaftar di Spencal.</p>
+            <p>Kode OTP Anda adalah: <b style='font-size: 20px; color: #4f46e5;'>$otp</b></p>
+            <p>Kode ini berlaku selama 10 menit.</p>
+        ";
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+
+
 ?>

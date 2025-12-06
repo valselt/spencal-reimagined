@@ -23,8 +23,8 @@ WORKDIR /var/www/html
 # 5. Copy Files
 COPY . /var/www/html/
 
-# 6. Install AWS SDK via Composer (Untuk MinIO)
-RUN composer require aws/aws-sdk-php
+# 6. Install AWS SDK via Composer (Untuk MinIO) dan PHPMailer
+RUN composer require aws/aws-sdk-php phpmailer/phpmailer
 
 # 7. Permissions
 RUN chown -R www-data:www-data /var/www/html

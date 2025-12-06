@@ -803,3 +803,17 @@ ul { list-style: none; }
 /* Sembunyikan Input File Asli */
 #hidden-file-input { display: none; }
 
+/* --- Tambahan Style Popup Warning --- */
+.popup-icon-box.warning {
+    background: #fef9c3; /* Kuning muda */
+    color: #ca8a04;      /* Kuning tua/emas */
+}
+
+.popup-btn.warning {
+    background: #ca8a04;
+    color: white;
+}
+.popup-btn.warning:hover {
+    background: #a16207;
+}
+

@@ -52,18 +52,32 @@ if (isset($_POST['register'])) {
              $_SESSION['popup_message'] = 'Username atau Email sudah terdaftar!';
         } else {
              $password_hash = password_hash($password, PASSWORD_DEFAULT);
-             $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-             $stmt->bind_param("sss", $username, $email, $password_hash);
+             
+             // 1. GENERATE OTP
+             $otp = rand(100000, 999999);
+             $expiry = date('Y-m-d H:i:s', strtotime('+10 minutes')); // Expire 10 menit
+
+             // 2. INSERT USER (VERIFIED = 0)
+             $stmt = $conn->prepare("INSERT INTO users (username, email, password, otp, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, 0)");
+             $stmt->bind_param("sssss", $username, $email, $password_hash, $otp, $expiry);
              
              if ($stmt->execute()) {
                  $last_id = $conn->insert_id;
-                 seedCategories($last_id, $conn);
+                 seedCategories($last_id, $conn); // Isi kategori default
                  
-                 // SUKSES -> Set Session lalu Redirect ke Login
-                 $_SESSION['popup_status'] = 'success';
-                 $_SESSION['popup_message'] = 'Registrasi Berhasil! Silakan Login.';
-                 header("Location: ../login/login.php"); // Popup akan muncul di halaman Login
-                 exit();
+                 // 3. KIRIM EMAIL
+                 if(sendOTPEmail($email, $otp)) {
+                     // Simpan email di session untuk halaman verify
+                     $_SESSION['verify_email'] = $email;
+                     
+                     $_SESSION['popup_status'] = 'success';
+                     $_SESSION['popup_message'] = 'Registrasi Berhasil! Kode OTP telah dikirim ke email Anda.';
+                     header("Location: ../register/verify.php"); 
+                     exit();
+                 } else {
+                     $_SESSION['popup_status'] = 'error';
+                     $_SESSION['popup_message'] = 'Gagal mengirim email OTP. Coba lagi.';
+                 }
              } else {
                  $_SESSION['popup_status'] = 'error';
                  $_SESSION['popup_message'] = 'Terjadi kesalahan sistem database.';
