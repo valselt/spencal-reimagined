@@ -145,6 +145,11 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             <ul class="sidebar-menu">
                 <li><a href="index.php" class="menu-item active"><i class='bx bxs-dashboard'></i> Dashboard</a></li>
                 <li><a href="transactions.php" class="menu-item"><i class='bx bx-list-ul'></i> Riwayat Transaksi</a></li>
+                <li>
+                    <a href="transaction_table.php" class="menu-item">
+                        <i class='bx bx-table'></i> Tabel Transaksi
+                    </a>
+                </li>
             </ul>
         </div>
 
