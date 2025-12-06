@@ -28,6 +28,7 @@ if (isset($_POST['submit_transaksi'])) {
 
     $stmt = $conn->prepare("INSERT INTO transactions (user_id, category_id, date, note, amount) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("iissd", $user_id, $cat_id, $tgl, $note, $amount);
+    
     if($stmt->execute()){
         // SUKSES
         $_SESSION['popup_status'] = 'success';
@@ -38,7 +39,7 @@ if (isset($_POST['submit_transaksi'])) {
         $_SESSION['popup_message'] = 'Gagal menyimpan transaksi.';
     }
     
-    // --- SOLUSI: REDIRECT SETELAH POST ---
+    // REDIRECT SETELAH POST
     header("Location: index.php"); 
     exit(); 
 }
@@ -100,6 +101,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Keuangan - Spencal</title>
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
+    
     <link rel="stylesheet" href="style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -139,6 +141,21 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             height: 300px;
             display: flex;
             justify-content: center;
+        }
+        
+        /* Style untuk Jam Realtime */
+        #live-clock {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+            background: #fff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            font-family: monospace; /* Agar lebar angka konsisten */
         }
     </style>
 </head>
@@ -190,6 +207,10 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         <header class="content-header">
             <h1>Dashboard Keuangan</h1>
             <p>Selamat datang kembali, <strong><?php echo htmlspecialchars($email_user); ?></strong></p>
+            
+            <div id="live-clock">
+                <i class='bx bx-time-five'></i> <span id="clock-text">Memuat waktu...</span>
+            </div>
         </header>
 
         <div class="stats-grid">
@@ -206,14 +227,13 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 </small>
             </div>
             <div class="card stat-card">
-                <h3>Pemasukan Hari Ini</h3>
-                <div class="value text-success">Rp <?php echo number_format($daily_in, 0, ',', '.'); ?></div>
-            </div>
-            <div class="card stat-card">
                 <h3>Pengeluaran Hari Ini</h3>
                 <div class="value text-danger">Rp <?php echo number_format($daily_out, 0, ',', '.'); ?></div>
             </div>
-            
+            <div class="card stat-card">
+                <h3>Pemasukan Hari Ini</h3>
+                <div class="value text-success">Rp <?php echo number_format($daily_in, 0, ',', '.'); ?></div>
+            </div>
         </div>
 
         <div class="input-section">
@@ -256,12 +276,6 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         </div>
 
         <div class="monthly-stats-grid">
-            <div class="stat-card-monthly" style="border-left-color: #4f46e5;">
-                <h4>Total Uang Bulan Ini</h4>
-                <div class="val <?php echo ($saldo_bulan_ini < 0) ? 'text-danger' : 'text-primary'; ?>">
-                    Rp <?php echo number_format($saldo_bulan_ini, 0, ',', '.'); ?>
-                </div>
-            </div>
             <div class="stat-card-monthly" style="border-left-color: #22c55e;">
                 <h4>Pemasukan Bulan Ini</h4>
                 <div class="val text-success">Rp <?php echo number_format($month_in, 0, ',', '.'); ?></div>
@@ -270,7 +284,12 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 <h4>Pengeluaran Bulan Ini</h4>
                 <div class="val text-danger">Rp <?php echo number_format($month_out, 0, ',', '.'); ?></div>
             </div>
-            
+            <div class="stat-card-monthly" style="border-left-color: #4f46e5;">
+                <h4>Total Uang Bulan Ini</h4>
+                <div class="val <?php echo ($saldo_bulan_ini < 0) ? 'text-danger' : 'text-primary'; ?>">
+                    Rp <?php echo number_format($saldo_bulan_ini, 0, ',', '.'); ?>
+                </div>
+            </div>
         </div>
 
         <div class="charts-grid">
@@ -301,6 +320,32 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
 </div>
 
 <script>
+    // --- JAM REALTIME SCRIPT ---
+    function startLiveClock() {
+        const clockElement = document.getElementById('clock-text');
+        
+        function update() {
+            const now = new Date();
+            // Format: Senin, 1 Januari 2025 13:00:00 WIB
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                timeZoneName: 'short'
+            };
+            // toLocaleDateString dengan locale Indonesia 'id-ID'
+            clockElement.textContent = now.toLocaleDateString('id-ID', options).replace('.', ':'); // Fix separator jam di beberapa browser
+        }
+        
+        setInterval(update, 1000); // Update setiap 1 detik
+        update(); // Jalankan langsung saat load
+    }
+    startLiveClock();
+
     // --- 1. JS FORMAT RUPIAH ---
     function formatRupiah(element) {
         let value = element.value.replace(/[^,\d]/g, '').toString();
