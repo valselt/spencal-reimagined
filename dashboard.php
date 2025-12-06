@@ -58,9 +58,10 @@ $chart_labels = ['Pemasukan', 'Pengeluaran'];
 <div class="admin-wrapper">
     <aside class="sidebar">
         <div>
-            <div class="sidebar-brand">
-                <div class="brand-logo">spencal<span>.</span></div>
+            <div class="brand-logo">
+                <img src="http://cdn.ivanaldorino.web.id/spencal/spencal_logo.png" alt="Spencal" class="brand-logo-img">
             </div>
+
             <ul class="sidebar-menu">
                 <li>
                     <a href="dashboard.php" class="menu-item active">
@@ -72,24 +73,37 @@ $chart_labels = ['Pemasukan', 'Pengeluaran'];
                         <i class='bx bxs-wallet-alt'></i> Data Tabungan
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="menu-item" style="opacity:0.5; cursor:not-allowed;">
-                        <i class='bx bxs-user-detail'></i> Profil & Kategori
-                    </a>
-                </li>
-            </ul>
+                </ul>
         </div>
+
+        <?php 
+            $q_user = $conn->query("SELECT profile_pic FROM users WHERE id='$user_id'");
+            $u_data = $q_user->fetch_assoc();
+            $pic_url = $u_data['profile_pic'];
+        ?>
         <div class="sidebar-profile">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?php echo strtoupper(substr($username, 0, 2)); ?>
+            <a href="profile.php" class="profile-info-link" title="Edit Profil">
+                <div class="user-info">
+                    <?php if(isset($pic_url) && $pic_url): ?>
+                        <img src="<?php echo $pic_url; ?>" class="user-avatar" style="object-fit:cover; width:40px; height:40px; border-radius:50%; margin-right:10px;">
+                    <?php elseif(isset($user_data['profile_pic']) && $user_data['profile_pic']): ?>
+                         <img src="<?php echo $user_data['profile_pic']; ?>" class="user-avatar" style="object-fit:cover; width:40px; height:40px; border-radius:50%; margin-right:10px;">
+                    <?php else: ?>
+                        <div class="user-avatar">
+                            <?php echo strtoupper(substr($_SESSION['username'], 0, 2)); ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <div class="user-details">
+                        <h4><?php echo htmlspecialchars($_SESSION['username']); ?></h4>
+                        <small>Edit Profil</small>
+                    </div>
                 </div>
-                <div class="user-details">
-                    <h4><?php echo htmlspecialchars($username); ?></h4>
-                    <small>Online</small>
-                </div>
-            </div>
-            <a href="logout.php" class="logout-link" title="Logout"><i class='bx bx-log-out-circle'></i></a>
+            </a>
+            
+            <a href="logout.php" class="logout-btn" title="Keluar / Logout">
+                <i class='bx bx-log-out-circle'></i>
+            </a>
         </div>
     </aside>
 

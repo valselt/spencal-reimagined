@@ -1,14 +1,30 @@
-# Gunakan image PHP versi stabil dengan Apache
 FROM php:8.2-apache
 
-# Install ekstensi MySQLi (Wajib untuk koneksi database)
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+# 1. Install System Dependencies & GD Library (untuk WebP)
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    unzip \
+    git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install gd mysqli
 
-# Aktifkan mod_rewrite Apache (Opsional, bagus untuk pengembangan kedepan)
+# 2. Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 3. Enable Mod Rewrite
 RUN a2enmod rewrite
 
-# Salin semua file project ke dalam container
+# 4. Setup Working Directory
+WORKDIR /var/www/html
+
+# 5. Copy Files
 COPY . /var/www/html/
 
-# Ubah hak akses agar Apache bisa membaca file
+# 6. Install AWS SDK via Composer (Untuk MinIO)
+RUN composer require aws/aws-sdk-php
+
+# 7. Permissions
 RUN chown -R www-data:www-data /var/www/html

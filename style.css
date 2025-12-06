@@ -63,12 +63,16 @@ ul { list-style: none; }
 }
 
 .brand-logo {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #ff6b35; /* Warna oranye spencal */
-    letter-spacing: -1px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.brand-logo span { color: var(--card-bg); }
+.brand-logo-img {
+    max-width: 150px; /* Atur ukuran logo */
+    height: auto;
+    display: block;
+}
 
 .sidebar-menu {
     padding: 20px;
@@ -97,11 +101,81 @@ ul { list-style: none; }
 }
 
 .sidebar-profile {
-    padding: 20px;
-    background: rgba(0,0,0,0.1);
+    margin: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between; /* Pisahkan kiri dan kanan */
+    border: 1px solid transparent;
+}
+
+.profile-info-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-grow: 1; /* Mengambil sisa ruang */
+    padding: 8px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.profile-info-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Area Kanan: Tombol Logout */
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-left: 5px;
+    border-radius: 8px;
+    color: #cbd5e1; /* Warna ikon abu */
+    transition: 0.3s;
+    background: transparent;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.2); /* Merah transparan */
+    color: #ef4444; /* Ikon jadi merah */
+}
+
+.logout-btn i { font-size: 1.4rem; }
+
+/* Text Styles Fix */
+.user-details h4 { color: var(--bg-light); margin: 0; font-size: 0.9rem; }
+.user-details small { color: var(--success); font-size: 0.75rem; }
+
+/* Pastikan teks tetap terbaca saat jadi link */
+.sidebar-profile .user-details h4 { color: var(--bg-light); margin: 0; }
+.sidebar-profile .user-details small { color: var(--success); }
+.sidebar-profile i { color: #cbd5e1; }
+
+/* Tambahan untuk Profile Page */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 30px;
+}
+.profile-pic-preview {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 3px solid var(--primary);
+}
+.badge-tipe {
+    padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;
+}
+.badge-in { background: #dcfce7; color: #166534; }
+.badge-out { background: #fee2e2; color: #991b1b; }
+
+@media (max-width: 768px) {
+    .profile-grid { grid-template-columns: 1fr; }
 }
 
 .user-info {
@@ -253,3 +327,101 @@ ul { list-style: none; }
 }
 .toggle-btn.active { background: var(--card-bg); color: var(--primary); box-shadow: var(--shadow); }
 .g-recaptcha { margin-bottom: 15px; display: flex; justify-content: center; }
+
+/* --- PROFILE PAGE MODERN RE-DESIGN --- */
+
+/* Tabs Navigation */
+.tab-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-btn {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: 0.3s;
+}
+
+.tab-btn:hover { color: var(--primary); }
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* Profile Layout (Avatar Kiri, Form Kanan) */
+.profile-flex-container {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.profile-avatar-section {
+    width: 150px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.profile-avatar-section small {
+    display: block;
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.profile-form-section {
+    flex-grow: 1;
+    max-width: 800px;
+}
+
+/* Danger Zone */
+.danger-zone {
+    margin-top: 40px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    border-radius: var(--radius-sm);
+    padding: 20px;
+}
+
+.danger-title {
+    color: #991b1b;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+}
+
+.danger-desc {
+    color: #7f1d1d;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    width: auto; /* Override full width */
+    display: inline-block;
+}
+.btn-danger:hover { background: #dc2626; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-flex-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .profile-form-section { width: 100%; }
+}
