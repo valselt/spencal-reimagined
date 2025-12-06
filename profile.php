@@ -124,7 +124,7 @@ $user_data = $u_res->fetch_assoc();
                 <img src="http://cdn.ivanaldorino.web.id/spencal/spencal_logo.png" alt="Spencal" class="brand-logo-img">
             </div>
             <ul class="sidebar-menu">
-                <li><a href="dashboard.php" class="menu-item"><i class='bx bxs-dashboard'></i> Dashboard</a></li>
+                <li><a href="index.php" class="menu-item"><i class='bx bxs-dashboard'></i> Dashboard</a></li>
             </ul>
         </div>
         
