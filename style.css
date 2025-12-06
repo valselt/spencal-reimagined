@@ -425,3 +425,111 @@ ul { list-style: none; }
     }
     .profile-form-section { width: 100%; }
 }
+
+/* --- REGISTER PAGE ENHANCEMENTS (FIXED PRIORITY) --- */
+
+/* 1. Modifikasi Input agar teks tidak menabrak ikon */
+.form-control {
+    padding-right: 45px !important; 
+}
+
+/* 2. Wrapper Input */
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* 3. Styling Ikon Validasi (Centang/Silang/Loading) */
+/* Selector diperkuat dengan '.input-wrapper' agar menang lawan Boxicons */
+.input-wrapper .validation-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%); /* Center Vertikal Absolut */
+    font-size: 1.6rem;           
+    line-height: 1;              /* Reset tinggi baris */
+    display: none;               /* Default mati */
+    pointer-events: none;
+    z-index: 10;
+}
+
+.validation-icon.valid { color: var(--success); }
+.validation-icon.invalid { color: var(--danger); }
+
+/* 4. Loading Spinner Animation */
+.loading-icon {
+    color: var(--text-muted);
+    font-size: 1.4rem !important; /* Sedikit lebih kecil */
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* 5. Password Requirements Box */
+/* --- 5. Password Requirements Box (Animated) --- */
+.password-requirements {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: left;
+    overflow: hidden; /* Wajib agar konten tidak bocor saat tertutup */
+    
+    /* State Tertutup (Default) */
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    padding: 0 12px; /* Padding atas/bawah 0 agar benar-benar kempis */
+    border-color: transparent; /* Sembunyikan border saat tertutup */
+    transform: translateY(-10px); /* Efek geser sedikit */
+    
+    /* Transisi Halus */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* State Terbuka (Menggunakan Class .show) */
+.password-requirements.show {
+    max-height: 200px; /* Cukup besar untuk menampung isi */
+    opacity: 1;
+    margin-top: 8px;
+    padding: 12px; /* Kembalikan padding */
+    border-color: #e2e8f0; /* Kembalikan border */
+    transform: translateY(0);
+}
+
+.req-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    transition: color 0.3s;
+}
+
+.req-item i { margin-right: 8px; font-size: 1.2rem; }
+.req-item.valid { color: var(--success); font-weight: 600; }
+.req-item.invalid { color: var(--text-muted); }
+
+.req-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    transition: color 0.3s;
+}
+
+.req-item i { margin-right: 8px; font-size: 1.2rem; }
+.req-item.valid { color: var(--success); font-weight: 600; }
+.req-item.invalid { color: var(--text-muted); }
+
+/* 6. reCAPTCHA Resizing */
+.captcha-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    overflow: hidden;
+}
+@media (min-width: 400px) {
+    .g-recaptcha { transform: scale(1.18); transform-origin: center; }
+}
