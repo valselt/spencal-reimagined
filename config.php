@@ -1,11 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Jakarta');
 
-use Aws\S3\S3Client;
-use Aws\Exception\AwsException;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-
 // ==========================================
 // KONSENTRASI DATA RAHASIA
 // ==========================================

@@ -86,12 +86,8 @@ $q_daily_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN
 $daily_in = $q_daily_in->fetch_assoc()['total'] ?? 0;
 
 // --- QUERY DATA RINCIAN HARIAN (LIST TRANSAKSI) ---
-// Rincian Pengeluaran Hari Ini
 $q_list_out = $conn->query("SELECT t.amount, t.note, c.name as category_name FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND t.date = '$today' ORDER BY t.id DESC");
-
-// Rincian Pemasukan Hari Ini
 $q_list_in = $conn->query("SELECT t.amount, t.note, c.name as category_name FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND t.date = '$today' ORDER BY t.id DESC");
-
 
 // --- QUERY DATA STATISTIK BULANAN ---
 $q_month_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year'");
@@ -145,43 +141,17 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         .stat-card-monthly .val { font-size: 1.5rem; font-weight: 700; }
         
         .chart-wrapper { position: relative; height: 300px; display: flex; justify-content: center; }
-        
 
-        /* Style Baru untuk Rincian Harian */
-        .daily-details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .detail-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 0.9rem;
-        }
+        .daily-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .detail-list { list-style: none; padding: 0; margin: 0; }
+        .detail-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
         .detail-item:last-child { border-bottom: none; }
         .detail-info { display: flex; flex-direction: column; }
         .detail-cat { font-weight: 600; color: var(--text-dark); }
         .detail-note { font-size: 0.8rem; color: var(--text-muted); }
         .detail-amount { font-weight: 700; }
 
-        /* Custom Section Title */
-        .section-title {
-            margin: 30px 0 15px 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .section-title { margin: 30px 0 15px 0; font-size: 1.2rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
 
         @media (max-width: 968px) { 
             .charts-grid, .daily-details-grid { grid-template-columns: 1fr; } 
@@ -256,6 +226,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 </small>
                 <div class="stat-icon"><i class='bx bx-wallet'></i></div>
             </div>
+            
             <div class="card stat-card stat-out">
                 <h3>Total Pengeluaran Hari Ini</h3>
                 <div class="value">Rp <?php echo number_format($daily_out, 0, ',', '.'); ?></div>
@@ -402,17 +373,11 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     function startLiveClock() {
         const timeDisplay = document.getElementById('time-text');
         const dateDisplay = document.getElementById('date-text');
-        
         function update() {
             const now = new Date();
-            
-            // 1. Format Tanggal (Senin, 1 Januari 2025)
             const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
             dateDisplay.innerText = now.toLocaleDateString('id-ID', dateOptions);
-
-            // 2. Format Waktu (Jam:Menit:Detik)
             const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            // replace(/\./g, ':') mengganti semua titik dengan titik dua (karena format id-ID pakai titik)
             timeDisplay.innerText = now.toLocaleTimeString('id-ID', timeOptions).replace(/\./g, ':');
         }
         setInterval(update, 1000); update();
@@ -430,33 +395,88 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         element.value = rupiah;
     }
 
+    // --- MODERN CHART COLORS ---
     function generateGreenShades(count) {
         let colors = [];
-        for (let i = 0; i < count; i++) { let lightness = 35 + (i * (50 / Math.max(count, 1))); colors.push(`hsl(132, 60%, ${lightness}%)`); }
+        for (let i = 0; i < count; i++) {
+            // Gradasi Hijau Teal-ish
+            let lightness = 40 + (i * (40 / Math.max(count, 1)));
+            colors.push(`hsl(160, 80%, ${lightness}%)`);
+        }
         return colors;
     }
 
     function generateRedShades(count) {
         let colors = [];
-        for (let i = 0; i < count; i++) { let lightness = 45 + (i * (45 / Math.max(count, 1))); colors.push(`hsl(350, 75%, ${lightness}%)`); }
+        for (let i = 0; i < count; i++) {
+            // Gradasi Merah Rose/Pink-ish
+            let lightness = 50 + (i * (40 / Math.max(count, 1)));
+            colors.push(`hsl(340, 90%, ${lightness}%)`);
+        }
         return colors;
     }
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '75%', // Bikin jadi Doughnut (Bolong Tengah)
+        plugins: {
+            legend: { 
+                position: 'bottom', 
+                labels: { 
+                    usePointStyle: true, // Pake buletan bukan kotak
+                    padding: 20,
+                    font: {
+                        family: "'DM Sans', sans-serif",
+                        size: 11
+                    }
+                } 
+            }
+        },
+        elements: {
+            arc: {
+                borderRadius: 15, // Rounded Corners
+                borderWidth: 2
+            }
+        },
+        layout: {
+            padding: 10
+        }
+    };
 
     <?php if(!empty($data_pie_in)): ?>
     const ctxIn = document.getElementById('incomeChart').getContext('2d');
     new Chart(ctxIn, {
-        type: 'pie',
-        data: { labels: <?php echo json_encode($label_pie_in); ?>, datasets: [{ data: <?php echo json_encode($data_pie_in); ?>, backgroundColor: generateGreenShades(<?php echo count($data_pie_in); ?>), borderWidth: 1, borderColor: '#ffffff' }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } } } }
+        type: 'doughnut', // Ganti jadi Doughnut
+        data: { 
+            labels: <?php echo json_encode($label_pie_in); ?>, 
+            datasets: [{ 
+                data: <?php echo json_encode($data_pie_in); ?>, 
+                backgroundColor: generateGreenShades(<?php echo count($data_pie_in); ?>), 
+                borderWidth: 2, 
+                borderColor: '#ffffff',
+                hoverOffset: 10 // Efek Pop-out saat hover
+            }] 
+        },
+        options: commonOptions
     });
     <?php endif; ?>
 
     <?php if(!empty($data_pie_out)): ?>
     const ctxOut = document.getElementById('expenseChart').getContext('2d');
     new Chart(ctxOut, {
-        type: 'pie',
-        data: { labels: <?php echo json_encode($label_pie_out); ?>, datasets: [{ data: <?php echo json_encode($data_pie_out); ?>, backgroundColor: generateRedShades(<?php echo count($data_pie_out); ?>), borderWidth: 1, borderColor: '#ffffff' }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } } } }
+        type: 'doughnut', // Ganti jadi Doughnut
+        data: { 
+            labels: <?php echo json_encode($label_pie_out); ?>, 
+            datasets: [{ 
+                data: <?php echo json_encode($data_pie_out); ?>, 
+                backgroundColor: generateRedShades(<?php echo count($data_pie_out); ?>), 
+                borderWidth: 2, 
+                borderColor: '#ffffff',
+                hoverOffset: 10
+            }] 
+        },
+        options: commonOptions
     });
     <?php endif; ?>
 
