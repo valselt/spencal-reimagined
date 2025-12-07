@@ -3,7 +3,43 @@ session_start();
 require 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login/login.php"); exit();
+    // TAMPILKAN HALAMAN LANDING SEDERHANA
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang di Spencal</title>
+    <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f1f5f9; font-family: 'DM Sans', sans-serif; }
+        .welcome-card { background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); max-width: 400px; width: 90%; }
+        .logo { max-width: 150px; margin-bottom: 20px; }
+        .btn-login-valselt {
+            background: #4f46e5; color: white; padding: 12px 20px; border-radius: 8px; 
+            text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .btn-login-valselt:hover { background: #4338ca; }
+    </style>
+</head>
+<body>
+    <div class="welcome-card">
+        <img src="http://cdn.ivanaldorino.web.id/spencal/spencal_logo.png" alt="Spencal" class="logo">
+        <h2 style="margin-bottom: 10px; color: #1e293b;">Kelola Keuanganmu</h2>
+        <p style="color: #64748b; margin-bottom: 30px;">Catat pengeluaran dan pemasukan dengan mudah.</p>
+        
+        <a href="login/login.php" class="btn-login-valselt">
+            <i class='bx bx-log-in-circle'></i> Login dengan Valselt ID
+        </a>
+    </div>
+</body>
+</html>
+<?php
+    exit(); // Hentikan script di sini agar dashboard tidak dimuat
 }
 
 $user_id = $_SESSION['user_id'];

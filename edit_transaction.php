@@ -71,7 +71,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             </ul>
         </div>
         <?php 
-            $q_user = $conn->query("SELECT profile_pic FROM users WHERE id='$user_id'");
+            $q_user = $conn_valselt->query("SELECT profile_pic FROM users WHERE id='$user_id'");
             $u_data = $q_user->fetch_assoc();
             $pic_url = $u_data['profile_pic'];
         ?>
