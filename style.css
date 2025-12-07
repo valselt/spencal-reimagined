@@ -817,3 +817,237 @@ ul { list-style: none; }
     background: #a16207;
 }
 
+/* =========================================
+   MOBILE RESPONSIVE (TAMPILAN HAPE)
+   ========================================= */
+
+@media (max-width: 968px) {
+
+    /* --- 1. LAYOUT UTAMA: UBAH JADI APP-STYLE --- */
+    .admin-wrapper {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+
+    body {
+        background: #f8fafc; /* Sedikit lebih terang di HP */
+        overflow-y: auto; /* Izinkan scroll body utama */
+    }
+
+    /* --- 2. SIDEBAR MENJADI BOTTOM NAVIGATION BAR --- */
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px; /* Tinggi Nav Bar Bawah */
+        background: #0f172a; /* Warna gelap */
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
+        z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+
+    /* Sembunyikan Logo Besar di Bawah */
+    .sidebar .brand-logo { 
+        display: none; 
+    }
+
+    /* Menu Menjadi Ikon Horizontal */
+    .sidebar-menu {
+        display: flex !important; /* Paksa muncul */
+        flex-direction: row;
+        width: 100%;
+        padding: 0;
+        justify-content: space-around; /* Bagi rata ikon */
+        align-items: center;
+        height: 100%;
+    }
+
+    .sidebar-menu li {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin: 0;
+    }
+
+    .menu-item {
+        flex-direction: column; /* Ikon di atas, teks di bawah */
+        justify-content: center;
+        padding: 5px;
+        margin: 0;
+        background: transparent !important; /* Hapus background hover kotak */
+        color: #64748b;
+        font-size: 0.7rem; /* Teks kecil */
+        gap: 4px;
+        border-radius: 0;
+    }
+
+    .menu-item i {
+        font-size: 1.4rem; /* Ikon diperbesar */
+        margin-right: 0;
+        margin-bottom: 2px;
+    }
+
+    .menu-item.active {
+        color: #6366f1; /* Warna aktif ungu terang */
+        background: transparent !important;
+    }
+    
+    .menu-item.active i {
+        transform: translateY(-2px); /* Efek naik sedikit */
+    }
+
+    /* --- 3. PROFILE & LOGOUT PINDAH KE ATAS (HEADER) --- */
+    .sidebar-profile {
+        display: flex !important; /* Paksa muncul */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background: #0f172a;
+        margin: 0;
+        padding: 0 20px;
+        border-radius: 0;
+        z-index: 999;
+        justify-content: space-between;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Sesuaikan Teks di Header Atas */
+    .sidebar-profile .user-details h4 {
+        color: white;
+        font-size: 1rem;
+    }
+    .sidebar-profile .user-details small {
+        color: #cbd5e1;
+    }
+    .sidebar-profile .user-avatar {
+        width: 35px; height: 35px; font-size: 0.8rem;
+    }
+
+    /* --- 4. KONTEN UTAMA (MAIN CONTENT) --- */
+    .main-content {
+        margin-top: 60px; /* Jarak untuk Header Atas */
+        margin-bottom: 70px; /* Jarak untuk Nav Bawah */
+        padding: 20px 15px; /* Padding kiri kanan lebih kecil */
+        height: auto;
+        overflow: visible;
+    }
+
+    .content-header h1 {
+        font-size: 1.5rem; /* Judul lebih kecil */
+    }
+    
+    /* Sembunyikan Jam Realtime di HP jika terlalu sempit */
+    #live-clock {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+
+    /* --- 5. GRID & CARD DASHBOARD --- */
+    .dashboard-layout-grid {
+        grid-template-columns: 1fr; /* Stack vertikal */
+        gap: 20px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr; /* Kartu saldo stack vertikal */
+        gap: 15px;
+    }
+
+    .stat-card .value {
+        font-size: 1.5rem; /* Ukuran angka disesuaikan */
+    }
+    
+    .monthly-stats-grid {
+        grid-template-columns: 1fr 1fr; /* Tetap 2 kolom untuk statistik bulanan */
+        gap: 10px;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* --- 6. TABEL TRANSAKSI (SCROLL HORIZONTAL) --- */
+    /* Agar tabel tidak merusak layout HP */
+    .table-container, .excel-container {
+        width: 100%;
+        overflow-x: auto; /* Scroll ke samping */
+        -webkit-overflow-scrolling: touch; /* Smooth scroll di iOS */
+        border-radius: 8px;
+    }
+
+    .custom-table, .excel-table {
+        min-width: 600px; /* Lebar minimum agar tabel tidak gepeng */
+    }
+    
+    /* Sembunyikan kolom Catatan di HP agar lebih rapi (Opsional) */
+    .custom-table th:nth-child(4), 
+    .custom-table td:nth-child(4) {
+        display: none;
+    }
+    
+    /* Kolom Aksi lebih rapat */
+    .custom-table td:last-child {
+        white-space: nowrap;
+    }
+
+    /* --- 7. FORM & INPUT --- */
+    .form-control {
+        font-size: 16px; /* Mencegah zoom otomatis di iPhone saat ngetik */
+        padding: 10px;
+    }
+    
+    /* Tombol lebih mudah ditekan */
+    .btn {
+        padding: 14px;
+        font-size: 1rem;
+    }
+    
+    /* Profil Page di HP */
+    .profile-flex-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .profile-avatar-section {
+        margin-bottom: 20px;
+    }
+    
+    /* Tab Navigasi Profil */
+    .tab-nav {
+        flex-wrap: wrap; /* Tab turun ke bawah jika sempit */
+    }
+    .tab-btn {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+    
+    /* --- 8. POPUP MODAL --- */
+    .popup-box {
+        width: 85%;
+        padding: 20px;
+    }
+    .crop-container {
+        max-height: 300px;
+    }
+}
+
+/* KHUSUS IPHONE KECIL (SE/5S) */
+@media (max-width: 380px) {
+    .monthly-stats-grid {
+        grid-template-columns: 1fr; /* Jadi 1 kolom di HP sangat kecil */
+    }
+    .sidebar-profile .user-details {
+        display: none; /* Sembunyikan nama, sisakan avatar di header */
+    }
+}
+
+
+

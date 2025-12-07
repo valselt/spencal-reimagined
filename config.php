@@ -1,7 +1,5 @@
 <?php
 date_default_timezone_set('Asia/Jakarta');
-// Load Composer Autoload (Pastikan path ini benar di Docker)
-require __DIR__ . '/vendor/autoload.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;

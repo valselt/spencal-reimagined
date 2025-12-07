@@ -34,6 +34,6 @@ if (isset($_GET['token'])) {
 
 // JIKA TOKEN SALAH/KADALUARSA/REFRESH:
 // Jangan die(), tapi lempar balik ke login biar user bisa coba lagi
-header("Location: login/login.php");
+header("Location: index.php");
 exit();
 ?>
