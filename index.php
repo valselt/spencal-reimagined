@@ -78,13 +78,22 @@ if (isset($_POST['submit_transaksi'])) {
     exit(); 
 }
 
-// --- QUERY DATA ---
+// --- QUERY DATA STATISTIK HARIAN (TOTAL) ---
 $q_daily_out = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND t.date = '$today'");
 $daily_out = $q_daily_out->fetch_assoc()['total'] ?? 0;
 
 $q_daily_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND t.date = '$today'");
 $daily_in = $q_daily_in->fetch_assoc()['total'] ?? 0;
 
+// --- QUERY DATA RINCIAN HARIAN (LIST TRANSAKSI) ---
+// Rincian Pengeluaran Hari Ini
+$q_list_out = $conn->query("SELECT t.amount, t.note, c.name as category_name FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND t.date = '$today' ORDER BY t.id DESC");
+
+// Rincian Pemasukan Hari Ini
+$q_list_in = $conn->query("SELECT t.amount, t.note, c.name as category_name FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND t.date = '$today' ORDER BY t.id DESC");
+
+
+// --- QUERY DATA STATISTIK BULANAN ---
 $q_month_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year'");
 $month_in = $q_month_in->fetch_assoc()['total'] ?? 0;
 
@@ -134,9 +143,49 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         .stat-card-monthly { background: var(--card-bg); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); }
         .stat-card-monthly h4 { margin: 0 0 10px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;}
         .stat-card-monthly .val { font-size: 1.5rem; font-weight: 700; }
-        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+        
         .chart-wrapper { position: relative; height: 300px; display: flex; justify-content: center; }
-        #live-clock { display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; background: #fff; padding: 5px 10px; border-radius: 20px; border: 1px solid #e2e8f0; font-family: monospace; }
+        
+
+        /* Style Baru untuk Rincian Harian */
+        .daily-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .detail-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-info { display: flex; flex-direction: column; }
+        .detail-cat { font-weight: 600; color: var(--text-dark); }
+        .detail-note { font-size: 0.8rem; color: var(--text-muted); }
+        .detail-amount { font-weight: 700; }
+
+        /* Custom Section Title */
+        .section-title {
+            margin: 30px 0 15px 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 968px) { 
+            .charts-grid, .daily-details-grid { grid-template-columns: 1fr; } 
+        }
     </style>
 </head>
 <body>
@@ -187,31 +236,36 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         <header class="content-header">
             <h1>Dashboard Keuangan</h1>
             <p>Selamat datang kembali, <strong><?php echo htmlspecialchars($email_user); ?></strong></p>
-            <div id="live-clock">
-                <i class='bx bx-time-five'></i> <span id="clock-text">Memuat waktu...</span>
+            <div id="live-clock" class="clock-simple">
+                <div class="date-small" id="date-text">Memuat...</div>
+                <div class="time-large" id="time-text">00:00:00</div>
             </div>
         </header>
 
         <div class="stats-grid">
-            <div class="card stat-card">
+            <div class="card stat-card stat-saldo">
                 <h3>Sisa Saldo Hari Ini</h3>
-                <div class="value <?php echo ($sisa_bisa_pakai_hari_ini > 0) ? 'text-primary' : 'text-danger'; ?>" style="font-size: 1.4rem;">
+                <div class="value">
                     Rp <?php echo number_format($sisa_bisa_pakai_hari_ini, 0, ',', '.'); ?>
-                    <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">
+                    <span style="font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.8);">
                         dari Rp <?php echo number_format($jatah_hari_ini, 0, ',', '.'); ?>
                     </span>
                 </div>
-                <small style="font-size:0.75rem; color:#94a3b8; margin-top:5px; display:block;">
+                <small style="font-size:0.75rem; margin-top:5px; display:block;">
                     (Jatah Harian untuk <?php echo $sisa_hari; ?> hari tersisa)
                 </small>
+                <div class="stat-icon"><i class='bx bx-wallet'></i></div>
             </div>
-            <div class="card stat-card">
-                <h3>Pengeluaran Hari Ini</h3>
-                <div class="value text-danger">Rp <?php echo number_format($daily_out, 0, ',', '.'); ?></div>
+            <div class="card stat-card stat-out">
+                <h3>Total Pengeluaran Hari Ini</h3>
+                <div class="value">Rp <?php echo number_format($daily_out, 0, ',', '.'); ?></div>
+                <div class="stat-icon"><i class='bx bx-trending-down'></i></div>
             </div>
-            <div class="card stat-card">
-                <h3>Pemasukan Hari Ini</h3>
-                <div class="value text-success">Rp <?php echo number_format($daily_in, 0, ',', '.'); ?></div>
+            
+            <div class="card stat-card stat-in">
+                <h3>Total Pemasukan Hari Ini</h3>
+                <div class="value">Rp <?php echo number_format($daily_in, 0, ',', '.'); ?></div>
+                <div class="stat-icon"><i class='bx bx-trending-up'></i></div>
             </div>
         </div>
 
@@ -253,6 +307,54 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 </form>
             </div>
         </div>
+
+        <h2 class="section-title"><i class='bx bx-list-check'></i> Rincian Hari Ini</h2>
+        
+        <div class="daily-details-grid">
+            <div class="card">
+                <h4 style="margin-bottom: 15px; color: var(--text-muted); display:flex; align-items:center; gap:5px;">
+                    <i class='bx bx-down-arrow-circle text-danger'></i> Rincian Pengeluaran
+                </h4>
+                <ul class="detail-list">
+                    <?php if ($q_list_out->num_rows > 0): ?>
+                        <?php while($row = $q_list_out->fetch_assoc()): ?>
+                            <li class="detail-item">
+                                <div class="detail-info">
+                                    <span class="detail-cat"><?php echo htmlspecialchars($row['category_name']); ?></span>
+                                    <span class="detail-note"><?php echo htmlspecialchars($row['note']); ?></span>
+                                </div>
+                                <span class="detail-amount text-danger">- Rp <?php echo number_format($row['amount'], 0, ',', '.'); ?></span>
+                            </li>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <li style="text-align:center; color:#cbd5e1; padding:10px;">Belum ada pengeluaran hari ini.</li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4 style="margin-bottom: 15px; color: var(--text-muted); display:flex; align-items:center; gap:5px;">
+                    <i class='bx bx-up-arrow-circle text-success'></i> Rincian Pemasukan
+                </h4>
+                <ul class="detail-list">
+                    <?php if ($q_list_in->num_rows > 0): ?>
+                        <?php while($row = $q_list_in->fetch_assoc()): ?>
+                            <li class="detail-item">
+                                <div class="detail-info">
+                                    <span class="detail-cat"><?php echo htmlspecialchars($row['category_name']); ?></span>
+                                    <span class="detail-note"><?php echo htmlspecialchars($row['note']); ?></span>
+                                </div>
+                                <span class="detail-amount text-success">+ Rp <?php echo number_format($row['amount'], 0, ',', '.'); ?></span>
+                            </li>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <li style="text-align:center; color:#cbd5e1; padding:10px;">Belum ada pemasukan hari ini.</li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title"><i class='bx bx-calendar'></i> Rincian Bulan Ini</h2>
 
         <div class="monthly-stats-grid">
             <div class="stat-card-monthly" style="border-left-color: #22c55e;">
@@ -298,11 +400,20 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
 
 <script>
     function startLiveClock() {
-        const clockElement = document.getElementById('clock-text');
+        const timeDisplay = document.getElementById('time-text');
+        const dateDisplay = document.getElementById('date-text');
+        
         function update() {
             const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
-            clockElement.textContent = now.toLocaleDateString('id-ID', options).replace('.', ':');
+            
+            // 1. Format Tanggal (Senin, 1 Januari 2025)
+            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            dateDisplay.innerText = now.toLocaleDateString('id-ID', dateOptions);
+
+            // 2. Format Waktu (Jam:Menit:Detik)
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            // replace(/\./g, ':') mengganti semua titik dengan titik dua (karena format id-ID pakai titik)
+            timeDisplay.innerText = now.toLocaleTimeString('id-ID', timeOptions).replace(/\./g, ':');
         }
         setInterval(update, 1000); update();
     }

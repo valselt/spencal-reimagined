@@ -233,8 +233,115 @@ ul { list-style: none; }
     gap: 20px;
     margin-bottom: 30px;
 }
-.stat-card h3 { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; margin-bottom: 10px; }
-.stat-card .value { font-size: 1.8rem; font-weight: 800; }
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    color: white; /* Teks putih untuk semua card berwarna */
+    border: none;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+.stat-card h3 {
+    color: rgba(255, 255, 255, 0.85) !important; /* Timpa warna muted bawaan */
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 5px;
+    z-index: 2;
+    position: relative;
+}
+.stat-card .value {
+    font-size: 2rem !important;
+    font-weight: 800;
+    color: white !important; /* Paksa putih */
+    z-index: 2;
+    position: relative;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+
+.stat-card small {
+    color: rgba(255, 255, 255, 0.7);
+    z-index: 2;
+    position: relative;
+}
+
+/* Dekorasi Ikon Besar di Latar Belakang */
+.stat-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -20px;
+    font-size: 6rem;
+    opacity: 0.6;
+    transform: rotate(-10deg);
+    z-index: 1;
+
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* VARIAN WARNA (GRADIENT + TEXTURE) */
+
+/* 1. Sisa Saldo (Ungu - 4f46e5) */
+.stat-saldo {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+}
+
+/* 2. Pengeluaran (Merah - ef4444) */
+.stat-out {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* 3. Pemasukan (Hijau - 22c55e) */
+.stat-in {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+/* Efek Texture (Pola Garis Halus) */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+    opacity: 0.25; /* Sesuaikan transparansi: 0.1 (halus) s/d 0.4 (tegas) */
+    mix-blend-mode: overlay; /* KUNCI: Membuat tekstur menyatu dengan warna background */
+    pointer-events: none;
+
+    /*
+       TUMPUKAN GRADIENT UNTUK EFEK UKIRAN UANG:
+       Kami menumpuk 3 lapisan pola untuk menciptakan efek moiré yang rumit
+       khas cetakan uang kertas.
+    */
+    background-image: 
+        /* Lapisan 1: Garis gelombang halus dari sudut kiri atas */
+        repeating-radial-gradient(
+            circle at 0% 0%, 
+            rgba(255,255,255,0.2) 0px, 
+            rgba(255,255,255,0.2) 1px, 
+            transparent 1px, 
+            transparent 6px
+        ),
+        /* Lapisan 2: Garis gelombang halus dari sudut kanan bawah (menciptakan pola silang) */
+        repeating-radial-gradient(
+            circle at 100% 100%, 
+            rgba(255,255,255,0.2) 0px, 
+            rgba(255,255,255,0.2) 1px, 
+            transparent 1px, 
+            transparent 6px
+        ),
+        /* Lapisan 3: Tekstur serat kertas kapas-linen yang sangat halus */
+        repeating-linear-gradient(
+            45deg,
+            rgba(0,0,0,0.1) 0px,
+            rgba(0,0,0,0.1) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+
+    /* Ukuran pola agar terlihat rapat seperti uang */
+    background-size: 60px 60px, 60px 60px, auto;
+}
 
 /* Dashboard Layout Grid (Form + Chart) */
 .dashboard-layout-grid {
@@ -825,9 +932,53 @@ ul { list-style: none; }
     height: 100%;
 }
 
-/* =========================================
-   MOBILE RESPONSIVE (TAMPILAN HAPE)
-   ========================================= */
+
+.clock-simple {
+    background: #000000;   /* Background Hitam */
+    color: #ffffff;        /* Warna Teks Putih */
+    padding: 15px;     /* Padding 7px (atas/bawah), 15px (kiri/kanan) biar manis */
+    border-radius: 25px;   /* Radius 10px */
+    
+    text-align: left;     /* Rata Kanan isi dalam kotak */
+    display: inline-flex;  /* Agar kotak mengikuti lebar konten */
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 5px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Bagian Jam (Besar & Tebal) */
+.time-large {
+    font-size: 1.5rem; 
+    font-weight: 800;
+    line-height: 1;
+    font-family: 'DM Sans', sans-serif;
+    color: #ffffff; /* Pastikan Putih */
+    letter-spacing: 0.5px;
+}
+
+/* Bagian Tanggal (Kecil di Atas) */
+.date-small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #cbd5e1; /* Putih agak abu (Slate-300) biar ada variasi */
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Adjustment */
+@media (max-width: 968px) {
+    .clock-simple {
+        width: 100%;       /* Di HP lebar penuh */
+        text-align: center; /* Teks rata tengah */
+        align-items: center;
+        margin-top: 15px;
+        padding: 10px;     /* Padding sedikit lebih besar di HP */
+    }
+    
+    .time-large { font-size: 1.4rem; }
+}
 
 /* =========================================
    MOBILE RESPONSIVE (TAMPILAN HAPE)
