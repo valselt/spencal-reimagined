@@ -160,14 +160,14 @@ $user_data = $u_res->fetch_assoc();
             </div>
 
             <div id="EditProfil" class="tab-content" style="display: block;">
-                <a href="https://valseltid.ivanaldorino.web.id/index.php" class="btn btn-primary" target="_blank">
+                <a href="https://valseltid.ivanaldorino.web.id/index.php" id="btn-valselt" class="btn btn-primary" target="_blank">
                     Edit Profil & Ganti Foto di Valselt ID <i class='bx bx-link-external'></i>
                 </a>
             </div>
 
             <div id="AturKategori" class="tab-content" style="display: none;">
                 <h3 style="margin-bottom:20px;">Kelola Kategori Transaksi</h3>
-                <form method="POST" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
+                <form method="POST" id="form-kategori" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
                     <div style="flex:1;">
                         <label class="form-label">Tipe</label>
                         <select name="cat_type" id="filterTipe" class="form-control" onchange="filterKategori()">

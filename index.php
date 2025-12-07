@@ -12,7 +12,9 @@ if (!isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selamat Datang di Spencal</title>
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
+    
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f1f5f9; font-family: 'DM Sans', sans-serif; }
@@ -39,7 +41,7 @@ if (!isset($_SESSION['user_id'])) {
 </body>
 </html>
 <?php
-    exit(); // Hentikan script di sini agar dashboard tidak dimuat
+    exit(); 
 }
 
 $user_id = $_SESSION['user_id'];
@@ -55,7 +57,7 @@ $total_hari_bulan_ini = date('t');
 $hari_ini_angka = date('j'); 
 $sisa_hari = $total_hari_bulan_ini - $hari_ini_angka + 1; 
 
-// --- PROSES INPUT TRANSAKSI (DENGAN PRG PATTERN) ---
+// --- PROSES INPUT TRANSAKSI ---
 if (isset($_POST['submit_transaksi'])) {
     $tgl = $_POST['tanggal'];
     $cat_id = $_POST['sub_jenis'];
@@ -66,35 +68,29 @@ if (isset($_POST['submit_transaksi'])) {
     $stmt->bind_param("iissd", $user_id, $cat_id, $tgl, $note, $amount);
     
     if($stmt->execute()){
-        // SUKSES
         $_SESSION['popup_status'] = 'success';
         $_SESSION['popup_message'] = 'Transaksi berhasil disimpan!';
     } else {
-        // GAGAL
         $_SESSION['popup_status'] = 'error';
         $_SESSION['popup_message'] = 'Gagal menyimpan transaksi.';
     }
-    
-    // REDIRECT SETELAH POST
     header("Location: index.php"); 
     exit(); 
 }
 
-// --- QUERY DATA STATISTIK HARIAN ---
+// --- QUERY DATA ---
 $q_daily_out = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND t.date = '$today'");
 $daily_out = $q_daily_out->fetch_assoc()['total'] ?? 0;
 
 $q_daily_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND t.date = '$today'");
 $daily_in = $q_daily_in->fetch_assoc()['total'] ?? 0;
 
-// --- QUERY DATA STATISTIK BULANAN ---
 $q_month_in = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year'");
 $month_in = $q_month_in->fetch_assoc()['total'] ?? 0;
 
 $q_month_out = $conn->query("SELECT SUM(amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year'");
 $month_out = $q_month_out->fetch_assoc()['total'] ?? 0;
 
-// --- LOGIKA HITUNG SISA SALDO ---
 $saldo_bulan_ini = $month_in - $month_out;
 $saldo_awal_hari_ini = $saldo_bulan_ini + $daily_out;
 
@@ -106,26 +102,15 @@ if ($sisa_hari > 0) {
 $sisa_bisa_pakai_hari_ini = $jatah_hari_ini - $daily_out;
 
 
-// --- QUERY DATA PIE CHART ---
-// A. Pemasukan
+// --- CHART DATA ---
 $query_pie_in = $conn->query("SELECT c.name, SUM(t.amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pemasukan' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year' GROUP BY c.name ORDER BY total DESC");
-$label_pie_in = [];
-$data_pie_in = [];
-while($row = $query_pie_in->fetch_assoc()){
-    $label_pie_in[] = $row['name'];
-    $data_pie_in[] = $row['total'];
-}
+$label_pie_in = []; $data_pie_in = [];
+while($row = $query_pie_in->fetch_assoc()){ $label_pie_in[] = $row['name']; $data_pie_in[] = $row['total']; }
 
-// B. Pengeluaran
 $query_pie_out = $conn->query("SELECT c.name, SUM(t.amount) as total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id='$user_id' AND c.type='pengeluaran' AND MONTH(t.date)='$cur_month' AND YEAR(t.date)='$cur_year' GROUP BY c.name ORDER BY total DESC");
-$label_pie_out = [];
-$data_pie_out = [];
-while($row = $query_pie_out->fetch_assoc()){
-    $label_pie_out[] = $row['name'];
-    $data_pie_out[] = $row['total'];
-}
+$label_pie_out = []; $data_pie_out = [];
+while($row = $query_pie_out->fetch_assoc()){ $label_pie_out[] = $row['name']; $data_pie_out[] = $row['total']; }
 
-// Dropdown Data
 $cats_pemasukan = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pemasukan'");
 $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pengeluaran'");
 ?>
@@ -138,61 +123,20 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     <title>Dashboard Keuangan - Spencal</title>
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
     
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .input-section { margin-bottom: 20px; }
-        
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .monthly-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px; 
-        }
-
-        .stat-card-monthly {
-            background: var(--card-bg);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid #e2e8f0;
-            border-left: 4px solid var(--primary); 
-        }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .monthly-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card-monthly { background: var(--card-bg); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); }
         .stat-card-monthly h4 { margin: 0 0 10px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;}
         .stat-card-monthly .val { font-size: 1.5rem; font-weight: 700; }
-
-        @media (max-width: 768px) {
-            .charts-grid { grid-template-columns: 1fr; }
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-            display: flex;
-            justify-content: center;
-        }
-        
-        /* Style untuk Jam Realtime */
-        #live-clock {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-            background: #fff;
-            padding: 5px 10px;
-            border-radius: 20px;
-            border: 1px solid #e2e8f0;
-            font-family: monospace; /* Agar lebar angka konsisten */
-        }
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+        .chart-wrapper { position: relative; height: 300px; display: flex; justify-content: center; }
+        #live-clock { display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; background: #fff; padding: 5px 10px; border-radius: 20px; border: 1px solid #e2e8f0; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -243,7 +187,6 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         <header class="content-header">
             <h1>Dashboard Keuangan</h1>
             <p>Selamat datang kembali, <strong><?php echo htmlspecialchars($email_user); ?></strong></p>
-            
             <div id="live-clock">
                 <i class='bx bx-time-five'></i> <span id="clock-text">Memuat waktu...</span>
             </div>
@@ -339,7 +282,6 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                     <?php endif; ?>
                 </div>
             </div>
-
             <div class="card">
                 <h2 class="card-title text-danger"><i class='bx bxs-down-arrow-circle'></i> Pengeluaran Bulan Ini</h2>
                 <div class="chart-wrapper">
@@ -351,122 +293,62 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 </div>
             </div>
         </div>
-
     </main>
 </div>
 
 <script>
-    // --- JAM REALTIME SCRIPT ---
     function startLiveClock() {
         const clockElement = document.getElementById('clock-text');
-        
         function update() {
             const now = new Date();
-            // Format: Senin, 1 Januari 2025 13:00:00 WIB
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                timeZoneName: 'short'
-            };
-            // toLocaleDateString dengan locale Indonesia 'id-ID'
-            clockElement.textContent = now.toLocaleDateString('id-ID', options).replace('.', ':'); // Fix separator jam di beberapa browser
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
+            clockElement.textContent = now.toLocaleDateString('id-ID', options).replace('.', ':');
         }
-        
-        setInterval(update, 1000); // Update setiap 1 detik
-        update(); // Jalankan langsung saat load
+        setInterval(update, 1000); update();
     }
     startLiveClock();
 
-    // --- 1. JS FORMAT RUPIAH ---
     function formatRupiah(element) {
         let value = element.value.replace(/[^,\d]/g, '').toString();
         let split = value.split(',');
         let sisa = split[0].length % 3;
         let rupiah = split[0].substr(0, sisa);
         let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
+        if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
         rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
         element.value = rupiah;
     }
 
-    // --- 2. JS COLOR GENERATOR (SHADES) ---
     function generateGreenShades(count) {
         let colors = [];
-        for (let i = 0; i < count; i++) {
-            let lightness = 35 + (i * (50 / Math.max(count, 1))); 
-            colors.push(`hsl(132, 60%, ${lightness}%)`);
-        }
+        for (let i = 0; i < count; i++) { let lightness = 35 + (i * (50 / Math.max(count, 1))); colors.push(`hsl(132, 60%, ${lightness}%)`); }
         return colors;
     }
 
     function generateRedShades(count) {
         let colors = [];
-        for (let i = 0; i < count; i++) {
-            let lightness = 45 + (i * (45 / Math.max(count, 1))); 
-            colors.push(`hsl(350, 75%, ${lightness}%)`);
-        }
+        for (let i = 0; i < count; i++) { let lightness = 45 + (i * (45 / Math.max(count, 1))); colors.push(`hsl(350, 75%, ${lightness}%)`); }
         return colors;
     }
 
-    // --- 3. CONFIG CHART PEMASUKAN ---
     <?php if(!empty($data_pie_in)): ?>
     const ctxIn = document.getElementById('incomeChart').getContext('2d');
     new Chart(ctxIn, {
         type: 'pie',
-        data: {
-            labels: <?php echo json_encode($label_pie_in); ?>,
-            datasets: [{
-                data: <?php echo json_encode($data_pie_in); ?>,
-                backgroundColor: generateGreenShades(<?php echo count($data_pie_in); ?>),
-                borderWidth: 1,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } }
-            }
-        }
+        data: { labels: <?php echo json_encode($label_pie_in); ?>, datasets: [{ data: <?php echo json_encode($data_pie_in); ?>, backgroundColor: generateGreenShades(<?php echo count($data_pie_in); ?>), borderWidth: 1, borderColor: '#ffffff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } } } }
     });
     <?php endif; ?>
 
-    // --- 4. CONFIG CHART PENGELUARAN ---
     <?php if(!empty($data_pie_out)): ?>
     const ctxOut = document.getElementById('expenseChart').getContext('2d');
     new Chart(ctxOut, {
         type: 'pie',
-        data: {
-            labels: <?php echo json_encode($label_pie_out); ?>,
-            datasets: [{
-                data: <?php echo json_encode($data_pie_out); ?>,
-                backgroundColor: generateRedShades(<?php echo count($data_pie_out); ?>),
-                borderWidth: 1,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } }
-            }
-        }
+        data: { labels: <?php echo json_encode($label_pie_out); ?>, datasets: [{ data: <?php echo json_encode($data_pie_out); ?>, backgroundColor: generateRedShades(<?php echo count($data_pie_out); ?>), borderWidth: 1, borderColor: '#ffffff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } } } }
     });
     <?php endif; ?>
 
-    // --- 5. LOGIC DROPDOWN ---
     const katPengeluaran = [<?php while($r = $cats_pengeluaran->fetch_assoc()){ echo "{id:{$r['id']}, name:'{$r['name']}'},"; } ?>];
     const katPemasukan = [<?php while($r = $cats_pemasukan->fetch_assoc()){ echo "{id:{$r['id']}, name:'{$r['name']}'},"; } ?>];
 
@@ -474,14 +356,8 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         const jenis = document.getElementById('jenis_transaksi').value;
         const subSelect = document.getElementById('sub_jenis');
         subSelect.innerHTML = '<option value="">Pilih Kategori...</option>';
-
         let data = (jenis === 'pengeluaran') ? katPengeluaran : katPemasukan;
-        data.forEach(item => {
-            let option = document.createElement('option');
-            option.value = item.id;
-            option.text = item.name;
-            subSelect.add(option);
-        });
+        data.forEach(item => { let option = document.createElement('option'); option.value = item.id; option.text = item.name; subSelect.add(option); });
     }
     updateSubJenis();
 </script>

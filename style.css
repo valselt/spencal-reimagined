@@ -817,13 +817,25 @@ ul { list-style: none; }
     background: #a16207;
 }
 
+.action-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px; /* Jarak antar tombol ke samping */
+    height: 100%;
+}
+
+/* =========================================
+   MOBILE RESPONSIVE (TAMPILAN HAPE)
+   ========================================= */
+
 /* =========================================
    MOBILE RESPONSIVE (TAMPILAN HAPE)
    ========================================= */
 
 @media (max-width: 968px) {
 
-    /* --- 1. LAYOUT UTAMA: UBAH JADI APP-STYLE --- */
+    /* --- 1. SETTING BODY & WRAPPER --- */
     .admin-wrapper {
         flex-direction: column;
         height: auto;
@@ -831,223 +843,250 @@ ul { list-style: none; }
     }
 
     body {
-        background: #f8fafc; /* Sedikit lebih terang di HP */
-        overflow-y: auto; /* Izinkan scroll body utama */
+        background: #f8fafc;
+        overflow-y: auto;
     }
 
-    /* --- 2. SIDEBAR MENJADI BOTTOM NAVIGATION BAR --- */
+    /* --- 2. SIDEBAR JADI BOTTOM BAR --- */
     .sidebar {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 65px; /* Tinggi Nav Bar Bawah */
-        background: #0f172a; /* Warna gelap */
-        flex-direction: row;
+        height: 70px; /* Tinggi Bar */
+        background: #0f172a;
+        flex-direction: row; /* Susun Horizontal */
         align-items: center;
-        justify-content: space-between;
-        padding: 0;
+        justify-content: space-between; /* Menu Kiri, Profil Kanan */
+        padding: 0 15px; /* Jarak kiri kanan */
         z-index: 1000;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
     }
 
-    /* Sembunyikan Logo Besar di Bawah */
-    .sidebar .brand-logo { 
-        display: none; 
+    /* --- 3. PENGATURAN MENU (KIRI) --- */
+    /* Wrapper menu (div pertama di sidebar) mengambil sisa ruang */
+    .sidebar > div:first-child {
+        flex-grow: 1; 
+        display: flex;
+        align-items: center;
     }
 
-    /* Menu Menjadi Ikon Horizontal */
+    /* Sembunyikan Logo */
+    .brand-logo { display: none; }
+
+    /* Menu UL */
     .sidebar-menu {
-        display: flex !important; /* Paksa muncul */
+        display: flex !important;
         flex-direction: row;
         width: 100%;
         padding: 0;
-        justify-content: space-around; /* Bagi rata ikon */
+        margin: 0;
+        justify-content: flex-start; /* Rata Kiri */
         align-items: center;
-        height: 100%;
+        gap: 15px; /* Jarak antar ikon menu */
     }
 
     .sidebar-menu li {
-        width: 100%;
-        display: flex;
-        justify-content: center;
+        width: auto;
         margin: 0;
     }
 
+    /* Item Menu (Ikon Besar) */
     .menu-item {
-        flex-direction: column; /* Ikon di atas, teks di bawah */
+        flex-direction: column;
         justify-content: center;
-        padding: 5px;
-        margin: 0;
-        background: transparent !important; /* Hapus background hover kotak */
+        padding: 8px;
+        background: transparent !important;
         color: #64748b;
-        font-size: 0.7rem; /* Teks kecil */
-        gap: 4px;
-        border-radius: 0;
+        font-size: 0 !important;
+        border-radius: 8px;
+        margin-bottom: 0px;
+        min-width: 50px; /* Area sentuh minimal */
+        text-align: center;
     }
 
     .menu-item i {
-        font-size: 1.4rem; /* Ikon diperbesar */
-        margin-right: 0;
-        margin-bottom: 2px;
+        font-size: 1.8rem !important;
+        margin: 0 !important;
     }
 
     .menu-item.active {
-        color: #6366f1; /* Warna aktif ungu terang */
-        background: transparent !important;
-    }
-    
-    .menu-item.active i {
-        transform: translateY(-2px); /* Efek naik sedikit */
+        color: #818cf8;
+        background: rgba(99, 102, 241, 0.1) !important;
     }
 
-    /* --- 3. PROFILE & LOGOUT PINDAH KE ATAS (HEADER) --- */
+    /* --- 4. PROFILE & LOGOUT (KANAN BAWAH) --- */
     .sidebar-profile {
-        display: flex !important; /* Paksa muncul */
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 60px;
-        background: #0f172a;
+        display: flex !important;
+        position: static; /* Tidak lagi fixed di atas */
+        background: transparent;
+        width: auto;
         margin: 0;
-        padding: 0 20px;
-        border-radius: 0;
-        z-index: 999;
-        justify-content: space-between;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        align-items: center;
+        gap: 10px; /* Jarak Foto ke Logout */
+        border-left: 1px solid rgba(255,255,255,0.1); /* Garis pemisah tipis */
+        padding-left: 15px;
+        margin-left: 10px;
     }
 
-    /* Sesuaikan Teks di Header Atas */
-    .sidebar-profile .user-details h4 {
-        color: white;
-        font-size: 1rem;
+    /* Link Profile (Foto) */
+    .profile-info-link {
+        padding: 0;
+        margin: 0;
     }
-    .sidebar-profile .user-details small {
-        color: #cbd5e1;
+
+    .profile-info-link:hover { background: transparent; }
+
+    /* Sembunyikan Nama User (Hemat tempat) */
+    .sidebar-profile .user-details {
+        display: none;
     }
+
+    /* Foto Profil */
     .sidebar-profile .user-avatar {
-        width: 35px; height: 35px; font-size: 0.8rem;
+        width: 38px;
+        height: 38px;
+        margin: 0;
+        border: 2px solid #6366f1; /* Border ungu biar jelas */
     }
 
-    /* --- 4. KONTEN UTAMA (MAIN CONTENT) --- */
-    .main-content {
-        margin-top: 60px; /* Jarak untuk Header Atas */
-        margin-bottom: 70px; /* Jarak untuk Nav Bawah */
-        padding: 20px 15px; /* Padding kiri kanan lebih kecil */
-        height: auto;
-        overflow: visible;
-    }
-
-    .content-header h1 {
-        font-size: 1.5rem; /* Judul lebih kecil */
+    /* Tombol Logout */
+    .logout-btn {
+        width: 38px;
+        height: 38px;
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border-radius: 50%; /* Bulat */
     }
     
-    /* Sembunyikan Jam Realtime di HP jika terlalu sempit */
+    .logout-btn:hover {
+        background: #ef4444;
+        color: white;
+    }
+
+    /* --- 5. MAIN CONTENT RESET --- */
+    .main-content {
+        margin-top: 0; /* Reset margin atas */
+        padding: 20px;
+        padding-bottom: 90px; /* Tambah padding bawah agar konten tidak tertutup navbar */
+    }
+
+    /* Header Halaman (Kembali Normal) */
+    .content-header h1 {
+        font-size: 1.5rem;
+        margin-top: 10px;
+    }
+    
     #live-clock {
-        font-size: 0.75rem;
-        padding: 4px 8px;
+        margin-top: 5px;
+        font-size: 0.8rem;
     }
 
-    /* --- 5. GRID & CARD DASHBOARD --- */
-    .dashboard-layout-grid {
-        grid-template-columns: 1fr; /* Stack vertikal */
-        gap: 20px;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr; /* Kartu saldo stack vertikal */
+    /* --- 6. LAIN-LAIN (FORM & TABLE) --- */
+    .dashboard-layout-grid, .stats-grid, .charts-grid {
+        grid-template-columns: 1fr;
         gap: 15px;
-    }
-
-    .stat-card .value {
-        font-size: 1.5rem; /* Ukuran angka disesuaikan */
     }
     
     .monthly-stats-grid {
-        grid-template-columns: 1fr 1fr; /* Tetap 2 kolom untuk statistik bulanan */
-        gap: 10px;
-    }
-    
-    .charts-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
-    /* --- 6. TABEL TRANSAKSI (SCROLL HORIZONTAL) --- */
-    /* Agar tabel tidak merusak layout HP */
+    /* Form Input Font Size (Anti Zoom iPhone) */
+    .form-control { font-size: 16px; padding: 12px; }
+    
+    /* Tabel Scroll */
     .table-container, .excel-container {
         width: 100%;
-        overflow-x: auto; /* Scroll ke samping */
-        -webkit-overflow-scrolling: touch; /* Smooth scroll di iOS */
-        border-radius: 8px;
+        overflow-x: auto;
     }
-
     .custom-table, .excel-table {
-        min-width: 600px; /* Lebar minimum agar tabel tidak gepeng */
+        min-width: 600px;
     }
     
-    /* Sembunyikan kolom Catatan di HP agar lebih rapi (Opsional) */
+    /* Hide Kolom Catatan di HP */
     .custom-table th:nth-child(4), 
     .custom-table td:nth-child(4) {
         display: none;
     }
     
-    /* Kolom Aksi lebih rapat */
-    .custom-table td:last-child {
-        white-space: nowrap;
+    /* Popup Modal Width */
+    .popup-box { width: 90%; }
+
+    .charts-grid .card {
+        min-width: 0; /* PENTING: Mengizinkan grid item menyusut di bawah kontennya */
+        width: 100%;  /* Memastikan lebar mengikuti grid */
+        overflow: hidden; /* Mencegah konten keluar dari kartu */
     }
 
-    /* --- 7. FORM & INPUT --- */
-    .form-control {
-        font-size: 16px; /* Mencegah zoom otomatis di iPhone saat ngetik */
-        padding: 10px;
+    /* 2. Batasi Wrapper Chart */
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
     }
-    
-    /* Tombol lebih mudah ditekan */
-    .btn {
-        padding: 14px;
-        font-size: 1rem;
+
+    /* 3. Paksa Canvas Chart.js agar responsif total */
+    .chart-wrapper canvas {
+        max-width: 100% !important;
+        height: auto !important;
     }
-    
-    /* Profil Page di HP */
-    .profile-flex-container {
-        flex-direction: column;
+
+    #btn-valselt {
+        font-size: 0.85rem !important; /* Huruf lebih kecil (sekitar 13px) */
+        padding: 10px 15px !important; /* Padding lebih tipis */
+        width: 100%;                   /* Tetap full width agar rapi */
+        display: inline-flex;
         align-items: center;
-    }
-    .profile-avatar-section {
-        margin-bottom: 20px;
-    }
-    
-    /* Tab Navigasi Profil */
-    .tab-nav {
-        flex-wrap: wrap; /* Tab turun ke bawah jika sempit */
-    }
-    .tab-btn {
-        flex: 1;
-        text-align: center;
-        padding: 10px;
-        font-size: 0.9rem;
+        justify-content: center;
+        gap: 5px;                      /* Jarak teks dan ikon */
+        white-space: normal;           /* Izinkan teks turun baris jika HP sangat kecil */
+        line-height: 1.2;              /* Jarak antar baris dirapatkan */
     }
     
-    /* --- 8. POPUP MODAL --- */
-    .popup-box {
-        width: 85%;
-        padding: 20px;
+    #btn-valselt i {
+        font-size: 1rem !important;    /* Ukuran ikon disesuaikan */
     }
-    .crop-container {
-        max-height: 300px;
+
+    .action-cell {
+        flex-direction: column; /* Ubah jadi vertikal */
+        gap: 10px;              /* Jarak antar tombol ke bawah */
+    }
+
+    /* Opsional: Agar tombol lebih mudah dipencet di HP */
+    .btn-action {
+        padding: 8px 12px; /* Memperbesar area tombol sedikit */
+    }
+
+    #form-kategori {
+        flex-direction: column !important; /* Paksa susun vertikal */
+        align-items: stretch !important;   /* Elemen melebar penuh */
+    }
+    
+    /* Tombol Tambah jadi Full Width */
+    #form-kategori button {
+        width: 100% !important;
+        margin-top: 5px;
+    }
+    
+    /* Input & Select agar rapi */
+    #form-kategori > div {
+        width: 100% !important;
+        flex: none !important; /* Matikan flex grow bawaan */
     }
 }
 
-/* KHUSUS IPHONE KECIL (SE/5S) */
+/* KHUSUS HP KECIL */
 @media (max-width: 380px) {
-    .monthly-stats-grid {
-        grid-template-columns: 1fr; /* Jadi 1 kolom di HP sangat kecil */
-    }
-    .sidebar-profile .user-details {
-        display: none; /* Sembunyikan nama, sisakan avatar di header */
-    }
+    .menu-item { min-width: 40px; }
+    .sidebar-menu { gap: 5px; }
+    .sidebar { padding: 0 10px; }
 }
+
 
 
 

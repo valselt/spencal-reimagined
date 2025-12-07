@@ -9,28 +9,20 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 
-// Cek ID Transaksi
-if (!isset($_GET['id'])) {
-    header("Location: transactions.php"); exit();
-}
-
+if (!isset($_GET['id'])) { header("Location: transactions.php"); exit(); }
 $trx_id = $_GET['id'];
 
-// Ambil Data Lama
 $stmt = $conn->prepare("SELECT t.*, c.type as cat_type FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.id = ? AND t.user_id = ?");
 $stmt->bind_param("ii", $trx_id, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 
-if (!$data) {
-    header("Location: transactions.php?msg=error"); exit();
-}
+if (!$data) { header("Location: transactions.php?msg=error"); exit(); }
 
-// --- PROSES UPDATE ---
 if (isset($_POST['update_transaksi'])) {
     $tgl = $_POST['tanggal'];
-    $cat_id = $_POST['sub_jenis']; // Pastikan nama input ini konsisten
+    $cat_id = $_POST['sub_jenis'];
     $note = htmlspecialchars($_POST['catatan']);
     $amount = str_replace('.', '', $_POST['total']); 
 
@@ -43,7 +35,6 @@ if (isset($_POST['update_transaksi'])) {
     }
 }
 
-// Data Kategori untuk Dropdown
 $cats_pemasukan = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pemasukan'");
 $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pengeluaran'");
 ?>
@@ -53,8 +44,11 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
 <head>
     <meta charset="UTF-8">
     <title>Edit Transaksi - Spencal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
-    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
@@ -68,6 +62,11 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             <ul class="sidebar-menu">
                 <li><a href="index.php" class="menu-item"><i class='bx bxs-dashboard'></i> Dashboard</a></li>
                 <li><a href="transactions.php" class="menu-item active"><i class='bx bx-list-ul'></i> Riwayat Transaksi</a></li>
+                <li>
+                    <a href="transaction_table.php" class="menu-item">
+                        <i class='bx bx-table'></i> Tabel Transaksi
+                    </a>
+                </li>
             </ul>
         </div>
         <?php 
@@ -120,7 +119,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 <div class="form-group">
                     <label class="form-label">Kategori</label>
                     <select name="sub_jenis" id="sub_jenis" class="form-control" required>
-                        </select>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -151,10 +150,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         let sisa = split[0].length % 3;
         let rupiah = split[0].substr(0, sisa);
         let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
+        if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
         rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
         element.value = rupiah;
     }
@@ -172,22 +168,15 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             let option = document.createElement('option');
             option.value = item.id;
             option.text = item.name;
-            if(selectedValue && item.id == selectedValue) {
-                option.selected = true;
-            }
+            if(selectedValue && item.id == selectedValue) { option.selected = true; }
             subSelect.add(option);
         });
     }
 
-    // Initialize saat Load
     document.addEventListener("DOMContentLoaded", function() {
         const initialType = document.getElementById('initial_type').value;
         const initialCatId = document.getElementById('initial_cat_id').value;
-
-        // Set Tipe Dropdown
         document.getElementById('jenis_transaksi').value = initialType;
-        
-        // Trigger update kategori dengan id yang sudah terpilih
         updateSubJenis(initialCatId);
     });
 </script>

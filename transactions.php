@@ -144,7 +144,7 @@ $result = $conn->query($query);
                                     <td style="font-weight: 700; font-family: monospace; font-size: 1rem;">
                                         Rp <?php echo number_format($row['amount'], 0, ',', '.'); ?>
                                     </td>
-                                    <td style="text-align:center;">
+                                    <td class="action-cell">
                                         <a href="edit_transaction.php?id=<?php echo $row['id']; ?>" class="btn-action btn-edit" title="Edit">
                                             <i class='bx bx-pencil'></i>
                                         </a>
