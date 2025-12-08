@@ -413,157 +413,519 @@ $user_data = $u_res->fetch_assoc();
 
 <script>
     const availableIcons = {
-
-    // ===========================
-    // KEUANGAN & BELANJA
-    // ===========================
-    finance: [
-        'payments','account_balance_wallet','credit_card','attach_money','monetization_on',
-        'currency_bitcoin','receipt_long','calculate','savings','paid','store','local_offer',
-        'redeem','shopping_cart','shopping_bag','shopping_basket','price_change',
-        'price_check','receipt','point_of_sale','add_card','atm','barcode_reader','wallet',
-        'card_membership','card_giftcard','loyalty','request_quote','trending_up','trending_down',
-        'trending_flat','account_balance','account_tree','analytics','bar_chart','leaderboard',
-        'account_balance','balance','insights','stacked_line_chart','query_stats'
-    ],
-
-    // ===========================
-    // MAKANAN & MINUMAN
-    // ===========================
-    food: [
-        'restaurant','grocery','local_dining','lunch_dining','fastfood','bakery_dining','local_cafe',
-        'local_bar','local_pizza','icecream','ramen_dining','kitchen','egg','water_drop',
-        'local_drink','set_meal','dinner_dining','brunch_dining','rice_bowl','flatware','fork_spoon','hanami_dango','coffee','wine_bar',
-        'liquor','tapas','outdoor_grill','cookie','nutrition','emoji_food_beverage'
-    ],
-
-    // ===========================
-    // TRANSPORTASI
-    // ===========================
-    transportation: [
-        'directions_car','directions_bus','train','tram','subway','directions_railway',
-        'local_taxi','pedal_bike','directions_walk','flight','airport_shuttle','hotel',
-        'commute','map','navigation','local_gas_station','ev_station','scooter','sailing',
-        'directions_boat','rv_hookup','car_rental','car_crash','bus_alert','airline_seat_recline_normal',
-        'airline_seat_individual_suite','airplane_ticket','connecting_airports'
-    ],
-
-    // ===========================
-    // TEKNOLOGI & GADGET
-    // ===========================
-    tech: [
-        'smartphone','phone_iphone','phone_android','laptop','desktop_windows','desktop_mac',
-        'headphones','camera_alt','videocam','tv','keyboard','mouse','router','bluetooth',
-        'wifi','memory','sd_card','print','speaker','watch','devices','cast','monitor',
-        'security','usb','mouse','keyboard_alt','gamepad','mic','mic_none','mic_off',
-        'headphones_battery','battery_full','battery_5_bar','battery_3_bar','battery_saver',
-        'brightness_auto','dark_mode','light_mode','contrast','data_usage','signal_cellular_alt','cloud',
-        'cloud_sync','cloud_download','cloud_upload','cloud_off','dns','qr_code','qr_code_scanner',
-        'barcode','storage','hub','device_unknown','headset_mic'
-    ],
-
-    // ===========================
-    // RUMAH & KEBUTUHAN
-    // ===========================
-    home: [
-        'home','chair','bed','bathtub','lightbulb','chair_alt','house_siding','cottage',
-        'villa','weekend','window','door_front','yard','vacuum','cleaning_services','build',
-        'plumbing','electrical_services','carpenter','handyman','roofing','grass','fireplace',
-        'ac_unit','air_purifier','heat_pump','iron','local_laundry_service','dry','kitchen',
-        'oven_gen','cooking','dishwasher','microwave','heat','oven','oven_gen','skillet','skillet_cooktop','stockpot','range_hood'
-    ],
-
-    // ===========================
-    // KESEHATAN & OLAHRAGA
-    // ===========================
-    health: [
-        'favorite','favorite_border','monitor_heart','medical_services','medication','medication_liquid',
-        'healing','health_and_safety','vaccines','coronavirus','masks','thermostat','bloodtype',
-        'fitness_center','sports_soccer','sports_basketball','sports_tennis','sports_volleyball',
-        'sports_mma','sports_kabaddi','sports_esports','pool','directions_run','directions_bike',
-        'pedal_bike','person_add','self_improvement','emoji_people'
-    ],
-
-    // ===========================
-    // PENDIDIKAN & PERKANTORAN
-    // ===========================
-    office: [
-        'menu_book','edit','description','folder','folder_open','create_new_folder','drive_file_move',
-        'calendar_month','schedule','alarm','notifications','person','groups','badge','print','work',
-        'school','auto_stories','library_books','library_add','fact_check','rule','task_alt','checklist',
-        'edit_note','note','sticky_note_2','assignment','draft','approval','bookmark','book','meeting_room',
-        'event','event_available','event_note','note_add','workspaces','workspace_premium'
-    ],
-
-    // ===========================
-    // SOSIAL, KOMUNIKASI & MEDIA
-    // ===========================
-    social: [
-        'chat','chat_bubble','sms','call','call_end','call_made','call_received','call_missed',
-        'contacts','contact_page','email','mark_email_unread','forum','groups','group_add','share',
-        'share_location','public','language','person_add','person_remove','person_pin','face','face_retouching_natural',
-        'mood','mood_bad','emoji_emotions','emoji_events','emoji_objects','thumb_up','thumb_down',
-        'handshake','diversity_1','diversity_2','diversity_3','sentiment_satisfied','sentiment_dissatisfied',
-        'sentiment_very_satisfied','sentiment_very_dissatisfied','support','live_help'
-    ],
-
-    // ===========================
-    // AKSI / ACTION ICONS
-    // ===========================
-    action: [
-        'add','remove','close','done','check','check_circle','done_all','refresh','autorenew','settings',
-        'settings_suggest','settings_accessibility','settings_backup_restore','logout','login','swap_vert',
-        'swap_horiz','open_in_new','open_with','home_app_logo','info','warning','error','help','tips_and_updates',
-        'star','star_half','grade','visibility','visibility_off','lock','lock_open','manage_accounts','verified',
-        'priority_high','lightbulb_circle','ads_click','bolt','extension','history','hourglass_empty',
-        'hourglass_full','build_circle','reorder','update','upgrade','fingerprint','translate'
-    ],
-
-    // ===========================
-    // KONTEN / EDITOR / UTILITAS
-    // ===========================
-    content: [
-        'content_copy','content_copy','cut','content_cut','content_paste','save','cloud_done','cloud_upload',
-        'cloud_download','delete','delete_forever','backspace','undo','redo','text_format','font_download',
-        'format_bold','format_italic','format_underlined','format_align_left','format_align_center',
-        'format_align_right','format_align_justify','format_list_bulleted','format_list_numbered','insert_photo',
-        'insert_chart','insert_link','insert_emoticon','table_chart','border_color','border_all','brush','palette',
-        'draw','image','crop','crop_free','crop_square','filter','filter_alt','tune','adjust','style','color_lens',
-        'wallpaper','animation','burst_mode','hdr_auto','panorama','slideshow'
-    ],
-
-    // ===========================
-    // NAVIGASI
-    // ===========================
-    navigation: [
-        'menu','apps','more_vert','more_horiz','arrow_back','arrow_forward','arrow_upward','arrow_downward',
-        'chevron_left','chevron_right','expand_more','expand_less','fullscreen','fullscreen_exit','unfold_more',
-        'unfold_less','refresh','first_page','last_page','subdirectory_arrow_right','subdirectory_arrow_left',
-        'home_work','explore','explore_off'
-    ],
-
-    // ===========================
-    // MAPS & LOKASI
-    // ===========================
-    maps: [
-        'map','location_on','location_off','location_searching','location_disabled','near_me','place',
-        'local_hospital','local_police','local_fire_department','local_post_office','local_florist',
-        'local_library','local_mall','local_movies','local_laundry_service','local_offer','zoom_in_map',
-        'zoom_out_map','directions','directions_run','directions_walk','directions_bus','directions_car',
-        'local_shipping','delivery_dining','run_circle','emergency','terrain','satellite'
-    ],
-
-    // ===========================
-    // MISC & LAINNYA
-    // ===========================
-    miscellaneous: [
-        'pets','child_care','child_friendly','toys','music_note','music_video','movie','theaters',
-        'book_online','local_activity','celebration','cake','party_mode','stars','auto_awesome',
-        'auto_awesome_mosaic','auto_fix_high','auto_fix_normal','auto_fix_off','magic_button',
-        'bubble_chart','insights','psychology','science','sports','downhill_skiing','surfing',
-        'kayaking','paragliding','skateboarding','snowboarding','snowshoeing','smoking_rooms','smoke_free','vaping_rooms'
-    ]
-
+        finance: [
+            { name: 'payments', tags: 'pembayaran payment pay transaksi transfer uang' },
+            { name: 'account_balance_wallet', tags: 'dompet wallet saldo uang finance' },
+            { name: 'credit_card', tags: 'kartu kredit pembayaran belanja card transaction' },
+            { name: 'attach_money', tags: 'uang money cash finansial bayar' },
+            { name: 'monetization_on', tags: 'monetisasi income pendapatan profit money' },
+            { name: 'currency_bitcoin', tags: 'bitcoin crypto kripto currency digital coin' },
+            { name: 'receipt_long', tags: 'struk panjang receipt belanja bukti transaksi' },
+            { name: 'calculate', tags: 'kalkulator hitung calculate finance angka' },
+            { name: 'savings', tags: 'tabungan savings deposit uang bank' },
+            { name: 'paid', tags: 'dibayar paid lunas selesai transaksi' },
+            { name: 'store', tags: 'toko store shop marketplace belanja' },
+            { name: 'local_offer', tags: 'diskon promo offer tag harga' },
+            { name: 'redeem', tags: 'redeem tukar voucher claim hadiah' },
+            { name: 'shopping_cart', tags: 'keranjang belanja shopping cart ecommerce' },
+            { name: 'shopping_bag', tags: 'tas belanja bag shopping mall' },
+            { name: 'shopping_basket', tags: 'keranjang basket belanja supermarket' },
+            { name: 'price_change', tags: 'perubahan harga price change naik turun' },
+            { name: 'price_check', tags: 'cek harga price check tag harga' },
+            { name: 'receipt', tags: 'struk receipt bukti transaksi belanja' },
+            { name: 'point_of_sale', tags: 'pos kasir point of sale pembayaran' },
+            { name: 'add_card', tags: 'tambah kartu add card payment' },
+            { name: 'atm', tags: 'atm mesin atm tarik tunai bank' },
+            { name: 'barcode_reader', tags: 'barcode scanner reader scan kode' },
+            { name: 'wallet', tags: 'wallet dompet digital uang' },
+            { name: 'card_membership', tags: 'kartu member membership loyalty card' },
+            { name: 'card_giftcard', tags: 'gift card kartu hadiah voucher gift' },
+            { name: 'loyalty', tags: 'loyalty poin pelanggan reward' },
+            { name: 'request_quote', tags: 'minta harga quote estimate penawaran' },
+            { name: 'trending_up', tags: 'tren naik trending up grafik investasi' },
+            { name: 'trending_down', tags: 'tren turun trending down grafik rugi' },
+            { name: 'trending_flat', tags: 'tren datar flat grafik stabil' },
+            { name: 'account_balance', tags: 'saldo akun balance uang bank' },
+            { name: 'account_tree', tags: 'struktur akun tree finance hierarchy' },
+            { name: 'analytics', tags: 'analitik analytics data finance insight' },
+            { name: 'bar_chart', tags: 'grafik batang bar chart statistik data' },
+            { name: 'leaderboard', tags: 'papan peringkat leaderboard ranking' },
+            { name: 'balance', tags: 'keseimbangan balance stabil financial' },
+            { name: 'insights', tags: 'insight analisis data analitik finance' },
+            { name: 'stacked_line_chart', tags: 'grafik garis stacked chart tren data' },
+            { name: 'query_stats', tags: 'statistik query stats analitik data' }
+        ],
+        food: [
+            { name: 'restaurant', tags: 'restoran restaurant makan dining tempat makan' },
+            { name: 'grocery', tags: 'grocery belanja bahan makanan pasar minimarket' },
+            { name: 'local_dining', tags: 'makan lokal dining food kuliner' },
+            { name: 'lunch_dining', tags: 'makan siang lunch dining food jajan' },
+            { name: 'fastfood', tags: 'fast food cepat saji burger fries makan jajan' },
+            { name: 'bakery_dining', tags: 'bakery roti kue pastry toko roti' },
+            { name: 'local_cafe', tags: 'kafe cafe coffee shop minuman' },
+            { name: 'local_bar', tags: 'bar minuman alcohol pub drink' },
+            { name: 'local_pizza', tags: 'pizza restoran pizza italian food' },
+            { name: 'icecream', tags: 'es krim ice cream dessert manis' },
+            { name: 'ramen_dining', tags: 'ramen mie jepang japanese food' },
+            { name: 'kitchen', tags: 'dapur kitchen cooking peralatan memasak' },
+            { name: 'egg', tags: 'telur egg protein makanan' },
+            { name: 'water_drop', tags: 'air water hydration minum' },
+            { name: 'local_drink', tags: 'minuman drink beverage juice soda' },
+            { name: 'set_meal', tags: 'paket makan set meal combo' },
+            { name: 'dinner_dining', tags: 'makan malam dinner dining food' },
+            { name: 'brunch_dining', tags: 'brunch sarapan siang dining' },
+            { name: 'rice_bowl', tags: 'mangkuk nasi rice bowl asia food beras' },
+            { name: 'flatware', tags: 'peralatan makan flatware sendok garpu' },
+            { name: 'fork_spoon', tags: 'sendok garpu utensil makan' },
+            { name: 'hanami_dango', tags: 'dango mochi japanese snack dessert jajan' },
+            { name: 'coffee', tags: 'kopi coffee caffeine minuman panas' },
+            { name: 'wine_bar', tags: 'wine anggur bar alcohol drink' },
+            { name: 'liquor', tags: 'liquor alkohol minuman keras spirit' },
+            { name: 'tapas', tags: 'tapas spanish food snack appetizer' },
+            { name: 'outdoor_grill', tags: 'grill barbeque bbq panggang outdoor' },
+            { name: 'cookie', tags: 'kue cookie dessert snack manis' },
+            { name: 'nutrition', tags: 'nutrisi nutrition health food diet' },
+            { name: 'emoji_food_beverage', tags: 'makanan minuman food beverage emoji teh cangkir tea' }
+        ],
+        transportation: [
+            { name: 'directions_car', tags: 'mobil car kendaraan transportasi drive' },
+            { name: 'directions_bus', tags: 'bus transportasi umum busway public transit' },
+            { name: 'train', tags: 'kereta train railway transportasi' },
+            { name: 'tram', tags: 'tram trem transportasi kota rail' },
+            { name: 'subway', tags: 'subway MRT metro kereta bawah tanah' },
+            { name: 'directions_railway', tags: 'rel kereta railway track transportasi' },
+            { name: 'local_taxi', tags: 'taksi taxi ride transportasi' },
+            { name: 'pedal_bike', tags: 'sepeda bike pedal cycling' },
+            { name: 'directions_walk', tags: 'jalan walk pejalan kaki' },
+            { name: 'flight', tags: 'pesawat flight airplane penerbangan' },
+            { name: 'airport_shuttle', tags: 'shuttle bandara airport transport bus' },
+            { name: 'hotel', tags: 'hotel penginapan lodging travel' },
+            { name: 'commute', tags: 'perjalanan commute kerja transport' },
+            { name: 'map', tags: 'peta map lokasi navigasi' },
+            { name: 'navigation', tags: 'navigasi navigation arah compass' },
+            { name: 'local_gas_station', tags: 'pom bensin gas station fuel' },
+            { name: 'ev_station', tags: 'stasiun ev charging listrik electric vehicle' },
+            { name: 'scooter', tags: 'skuter scooter kendaraan kecil' },
+            { name: 'sailing', tags: 'perahu layar sailing boat laut' },
+            { name: 'directions_boat', tags: 'kapal boat ferry laut' },
+            { name: 'rv_hookup', tags: 'rv camper hookup camping mobil' },
+            { name: 'car_rental', tags: 'sewa mobil car rental travel' },
+            { name: 'car_crash', tags: 'kecelakaan crash mobil emergency' },
+            { name: 'bus_alert', tags: 'alert bus peringatan jadwal transport' },
+            { name: 'airline_seat_recline_normal', tags: 'kursi pesawat seat recline travel' },
+            { name: 'airline_seat_individual_suite', tags: 'suite pesawat seat premium first class' },
+            { name: 'airplane_ticket', tags: 'tiket pesawat airplane ticket travel' },
+            { name: 'connecting_airports', tags: 'bandara transit connecting flights travel' }
+        ],
+        tech: [
+            { name: 'smartphone', tags: 'smartphone hp ponsel mobile phone gadget' },
+            { name: 'phone_iphone', tags: 'iphone ios smartphone apple mobile' },
+            { name: 'phone_android', tags: 'android phone smartphone google device' },
+            { name: 'laptop', tags: 'laptop komputer notebook pc portable' },
+            { name: 'desktop_windows', tags: 'desktop windows pc komputer' },
+            { name: 'desktop_mac', tags: 'mac desktop apple macintosh komputer' },
+            { name: 'headphones', tags: 'headphone audio musik earphone device' },
+            { name: 'camera_alt', tags: 'kamera camera foto photography' },
+            { name: 'videocam', tags: 'kamera video camcorder filming' },
+            { name: 'tv', tags: 'televisi tv layar monitor media' },
+            { name: 'keyboard', tags: 'keyboard papan ketik komputer input' },
+            { name: 'mouse', tags: 'mouse komputer input device pointer' },
+            { name: 'router', tags: 'router wifi jaringan internet device' },
+            { name: 'bluetooth', tags: 'bluetooth koneksi wireless pairing' },
+            { name: 'wifi', tags: 'wifi internet jaringan sinyal' },
+            { name: 'memory', tags: 'memori memory ram storage hardware' },
+            { name: 'sd_card', tags: 'sd card kartu memori penyimpanan' },
+            { name: 'print', tags: 'printer print cetak dokumen' },
+            { name: 'speaker', tags: 'speaker audio suara sound device' },
+            { name: 'watch', tags: 'jam watch smartwatch wearable' },
+            { name: 'devices', tags: 'perangkat devices gadget electronics' },
+            { name: 'cast', tags: 'cast screen mirroring display' },
+            { name: 'monitor', tags: 'monitor layar komputer display' },
+            { name: 'security', tags: 'keamanan security protection cyber' },
+            { name: 'usb', tags: 'usb port konektor device' },
+            { name: 'keyboard_alt', tags: 'keyboard alternatif input device' },
+            { name: 'gamepad', tags: 'gamepad kontroler gaming joystick' },
+            { name: 'mic', tags: 'mikrofon mic audio recording' },
+            { name: 'mic_none', tags: 'mic none mikrofon off muted' },
+            { name: 'mic_off', tags: 'mic off mute suara mati' },
+            { name: 'headphones_battery', tags: 'headphone battery daya audio' },
+            { name: 'battery_full', tags: 'baterai penuh battery full charge' },
+            { name: 'battery_5_bar', tags: 'baterai 5 bar battery medium charge' },
+            { name: 'battery_3_bar', tags: 'baterai 3 bar battery low charge' },
+            { name: 'battery_saver', tags: 'penghemat baterai battery saver mode' },
+            { name: 'brightness_auto', tags: 'kecerahan otomatis brightness auto' },
+            { name: 'dark_mode', tags: 'dark mode tema gelap display' },
+            { name: 'light_mode', tags: 'light mode tema terang display' },
+            { name: 'contrast', tags: 'kontras contrast display visual' },
+            { name: 'data_usage', tags: 'penggunaan data usage internet' },
+            { name: 'signal_cellular_alt', tags: 'sinyal seluler cellular signal network' },
+            { name: 'cloud', tags: 'cloud awan storage online' },
+            { name: 'cloud_sync', tags: 'sinkronisasi cloud sync online' },
+            { name: 'cloud_download', tags: 'cloud download unduh storage' },
+            { name: 'cloud_upload', tags: 'cloud upload unggah storage' },
+            { name: 'cloud_off', tags: 'cloud off offline disconnected' },
+            { name: 'dns', tags: 'dns server jaringan internet' },
+            { name: 'qr_code', tags: 'qr code scan barcode digital' },
+            { name: 'qr_code_scanner', tags: 'scanner qr code scan device' },
+            { name: 'barcode', tags: 'barcode scan kode produk' },
+            { name: 'storage', tags: 'penyimpanan storage device memory' },
+            { name: 'hub', tags: 'hub port konektor usb device' },
+            { name: 'device_unknown', tags: 'perangkat tidak dikenal unknown device error' },
+            { name: 'headset_mic', tags: 'headset mic audio komunikasi' }
+        ],
+        home: [
+            { name: 'home', tags: 'rumah home tempat tinggal' },
+            { name: 'chair', tags: 'kursi chair furniture duduk' },
+            { name: 'bed', tags: 'tempat tidur bed kamar' },
+            { name: 'bathtub', tags: 'bathtub bak mandi bathroom' },
+            { name: 'lightbulb', tags: 'lampu lightbulb pencahayaan ideas' },
+            { name: 'chair_alt', tags: 'kursi alternatif chair furniture' },
+            { name: 'house_siding', tags: 'dinding rumah siding exterior' },
+            { name: 'cottage', tags: 'pondok cottage rumah kecil' },
+            { name: 'villa', tags: 'villa rumah mewah holiday house' },
+            { name: 'weekend', tags: 'liburan weekend rumah santai' },
+            { name: 'window', tags: 'jendela window rumah kaca' },
+            { name: 'door_front', tags: 'pintu depan front door entry' },
+            { name: 'yard', tags: 'halaman yard outdoor taman' },
+            { name: 'vacuum', tags: 'vacuum penyedot debu cleaning' },
+            { name: 'cleaning_services', tags: 'jasa bersih cleaning services rumah' },
+            { name: 'build', tags: 'bangun build konstruksi rumah' },
+            { name: 'plumbing', tags: 'pipa plumbing instalasi air' },
+            { name: 'electrical_services', tags: 'listrik electrical instalasi listrik' },
+            { name: 'carpenter', tags: 'tukang kayu carpenter woodworking' },
+            { name: 'handyman', tags: 'tukang handyman perbaikan service' },
+            { name: 'roofing', tags: 'atap roofing perbaikan roof' },
+            { name: 'grass', tags: 'rumput grass taman outdoor' },
+            { name: 'fireplace', tags: 'perapian fireplace panas' },
+            { name: 'ac_unit', tags: 'ac unit pendingin udara air conditioner' },
+            { name: 'air_purifier', tags: 'air purifier penyaring udara rumah' },
+            { name: 'heat_pump', tags: 'heat pump pemanas pendingin' },
+            { name: 'iron', tags: 'setrika iron pakaian laundry' },
+            { name: 'local_laundry_service', tags: 'laundry cucian jasa mencuci mesin cuci washing' },
+            { name: 'dry', tags: 'keringkan dry clothes laundry' },
+            { name: 'kitchen', tags: 'dapur kitchen rumah memasak' },
+            { name: 'oven_gen', tags: 'oven general cooking baking' },
+            { name: 'cooking', tags: 'memasak cooking food kitchen' },
+            { name: 'dishwasher', tags: 'pencuci piring dishwasher kitchen' },
+            { name: 'microwave', tags: 'microwave oven cepat panas' },
+            { name: 'heat', tags: 'panas heat suhu cooking' },
+            { name: 'oven', tags: 'oven baking roasting memasak' },
+            { name: 'skillet', tags: 'wajan skillet frying pan' },
+            { name: 'skillet_cooktop', tags: 'kompor skillet cooktop wajan' },
+            { name: 'stockpot', tags: 'panci besar stockpot cooking' },
+            { name: 'range_hood', tags: 'penghisap asap range hood dapur' }
+        ],
+        health: [
+            { name: 'favorite', tags: 'favorit love health wellbeing suka' },
+            { name: 'favorite_border', tags: 'favorit kosong love outline like' },
+            { name: 'monitor_heart', tags: 'detak jantung monitor heart kesehatan cardiology' },
+            { name: 'medical_services', tags: 'layanan medis medical services kesehatan' },
+            { name: 'medication', tags: 'obat medication pharmacy kesehatan' },
+            { name: 'medication_liquid', tags: 'obat cair liquid medicine syrup' },
+            { name: 'healing', tags: 'penyembuhan healing recovery health' },
+            { name: 'health_and_safety', tags: 'kesehatan dan keselamatan health safety' },
+            { name: 'vaccines', tags: 'vaksin vaccines imunisasi kesehatan' },
+            { name: 'coronavirus', tags: 'corona covid virus pandemi health' },
+            { name: 'masks', tags: 'masker masks kesehatan perlindungan' },
+            { name: 'thermostat', tags: 'termometer thermostat suhu temperature' },
+            { name: 'bloodtype', tags: 'golongan darah blood type kesehatan' },
+            { name: 'fitness_center', tags: 'fitness gym olahraga workout' },
+            { name: 'sports_soccer', tags: 'sepak bola soccer sports football' },
+            { name: 'sports_basketball', tags: 'bola basket basketball sports' },
+            { name: 'sports_tennis', tags: 'tenis tennis sports raket' },
+            { name: 'sports_volleyball', tags: 'voli volleyball sports permainan' },
+            { name: 'sports_mma', tags: 'mma bela diri mixed martial arts fight' },
+            { name: 'sports_kabaddi', tags: 'kabaddi olahraga india sports game' },
+            { name: 'sports_esports', tags: 'e-sports esports gaming kompetitif' },
+            { name: 'pool', tags: 'kolam renang pool swimming olahraga' },
+            { name: 'directions_run', tags: 'lari run jogging workout' },
+            { name: 'directions_bike', tags: 'bersepeda bike cycling olahraga' },
+            { name: 'pedal_bike', tags: 'sepeda pedal bike cycling' },
+            { name: 'person_add', tags: 'tambah orang person add community' },
+            { name: 'self_improvement', tags: 'pengembangan diri self improvement meditasi' },
+            { name: 'emoji_people', tags: 'orang people emoji human' }
+        ],
+        office: [
+            { name: 'menu_book', tags: 'buku menu book membaca referensi' },
+            { name: 'edit', tags: 'edit ubah modify pencil' },
+            { name: 'description', tags: 'deskripsi description dokumen file' },
+            { name: 'folder', tags: 'folder direktori penyimpanan file' },
+            { name: 'folder_open', tags: 'folder terbuka open directory' },
+            { name: 'create_new_folder', tags: 'buat folder baru create folder new' },
+            { name: 'drive_file_move', tags: 'pindah file move drive storage' },
+            { name: 'calendar_month', tags: 'kalender bulan calendar schedule date' },
+            { name: 'schedule', tags: 'jadwal schedule waktu planning' },
+            { name: 'alarm', tags: 'alarm pengingat waktu reminder' },
+            { name: 'notifications', tags: 'notifikasi notifications alert pemberitahuan' },
+            { name: 'person', tags: 'orang person user profile' },
+            { name: 'groups', tags: 'grup groups team komunitas' },
+            { name: 'badge', tags: 'lencana badge id card identitas' },
+            { name: 'print', tags: 'cetak print dokumen printer' },
+            { name: 'work', tags: 'kerja work job kantor' },
+            { name: 'school', tags: 'sekolah school pendidikan lesson' },
+            { name: 'auto_stories', tags: 'story cerita auto stories buku' },
+            { name: 'library_books', tags: 'perpustakaan library books koleksi' },
+            { name: 'library_add', tags: 'tambah ke library add koleksi' },
+            { name: 'fact_check', tags: 'cek fakta fact check validasi' },
+            { name: 'rule', tags: 'aturan rule garis penggaris' },
+            { name: 'task_alt', tags: 'tugas selesai task checklist done' },
+            { name: 'checklist', tags: 'daftar tugas checklist to-do list' },
+            { name: 'edit_note', tags: 'edit catatan edit note modify' },
+            { name: 'note', tags: 'catatan note memo tulisan' },
+            { name: 'sticky_note_2', tags: 'sticky note memo tempel kertas' },
+            { name: 'assignment', tags: 'tugas assignment file kerja sekolah' },
+            { name: 'draft', tags: 'draft konsep draf dokumen' },
+            { name: 'approval', tags: 'persetujuan approval acc otorisasi' },
+            { name: 'bookmark', tags: 'penanda bookmark simpan halaman' },
+            { name: 'book', tags: 'buku book membaca literatur' },
+            { name: 'meeting_room', tags: 'ruang rapat meeting room kantor' },
+            { name: 'event', tags: 'acara event kegiatan kalender' },
+            { name: 'event_available', tags: 'event tersedia available jadwal' },
+            { name: 'event_note', tags: 'catatan event note jadwal' },
+            { name: 'note_add', tags: 'tambah catatan note add' },
+            { name: 'workspaces', tags: 'ruang kerja workspaces team collaboration' },
+            { name: 'workspace_premium', tags: 'ruang kerja premium workspace vip office' }
+        ],
+        social: [
+            { name: 'chat', tags: 'chat obrolan pesan message talk' },
+            { name: 'chat_bubble', tags: 'chat bubble pesan percakapan message' },
+            { name: 'sms', tags: 'sms pesan teks message text' },
+            { name: 'call', tags: 'panggilan call telepon voice' },
+            { name: 'call_end', tags: 'akhiri panggilan call end hang up' },
+            { name: 'call_made', tags: 'panggilan keluar call made' },
+            { name: 'call_received', tags: 'panggilan masuk received call' },
+            { name: 'call_missed', tags: 'panggilan tak terjawab missed call' },
+            { name: 'contacts', tags: 'kontak contacts daftar nomor' },
+            { name: 'contact_page', tags: 'halaman kontak contact page profile' },
+            { name: 'email', tags: 'email surat elektronik mail inbox' },
+            { name: 'mark_email_unread', tags: 'email belum dibaca unread mail' },
+            { name: 'forum', tags: 'forum diskusi chat komunitas' },
+            { name: 'groups', tags: 'grup groups komunitas team' },
+            { name: 'group_add', tags: 'tambah grup add group community' },
+            { name: 'share', tags: 'bagikan share sosial media' },
+            { name: 'share_location', tags: 'bagikan lokasi share location gps' },
+            { name: 'public', tags: 'publik public global dunia' },
+            { name: 'language', tags: 'bahasa language translate global' },
+            { name: 'person_add', tags: 'tambah orang add person follow' },
+            { name: 'person_remove', tags: 'hapus orang remove person unfollow' },
+            { name: 'person_pin', tags: 'pin lokasi orang person pin map' },
+            { name: 'face', tags: 'wajah face human profile' },
+            { name: 'face_retouching_natural', tags: 'retouch wajah edit natural beauty' },
+            { name: 'mood', tags: 'mood bahagia happy smile' },
+            { name: 'mood_bad', tags: 'mood buruk sad bad unhappy' },
+            { name: 'emoji_emotions', tags: 'emoji emosi emotions smiley' },
+            { name: 'emoji_events', tags: 'emoji acara events celebration' },
+            { name: 'emoji_objects', tags: 'emoji objek objects stuff' },
+            { name: 'thumb_up', tags: 'like thumbs up suka setuju' },
+            { name: 'thumb_down', tags: 'dislike thumbs down tidak setuju' },
+            { name: 'handshake', tags: 'jabat tangan handshake agreement deal' },
+            { name: 'diversity_1', tags: 'keberagaman diversity people group' },
+            { name: 'diversity_2', tags: 'diversity kelompok komunitas inklusif' },
+            { name: 'diversity_3', tags: 'diversity variasi people community' },
+            { name: 'sentiment_satisfied', tags: 'senang satisfied happy emotion' },
+            { name: 'sentiment_dissatisfied', tags: 'tidak puas dissatisfied sad emotion' },
+            { name: 'sentiment_very_satisfied', tags: 'sangat puas very satisfied happy' },
+            { name: 'sentiment_very_dissatisfied', tags: 'sangat tidak puas very dissatisfied upset' },
+            { name: 'support', tags: 'dukungan support bantuan help' },
+            { name: 'live_help', tags: 'live help bantuan chat support' }
+        ],
+        action: [
+            { name: 'add', tags: 'tambah add plus new' },
+            { name: 'remove', tags: 'hapus remove delete minus' },
+            { name: 'close', tags: 'tutup close exit cancel' },
+            { name: 'done', tags: 'selesai done complete check' },
+            { name: 'check', tags: 'cek check benar correct' },
+            { name: 'check_circle', tags: 'cek lingkaran check circle verified' },
+            { name: 'done_all', tags: 'selesai semua done all checklist' },
+            { name: 'refresh', tags: 'refresh ulang reload update' },
+            { name: 'autorenew', tags: 'pembaruan otomatis autorenew repeat' },
+            { name: 'settings', tags: 'pengaturan settings konfigurasi' },
+            { name: 'settings_suggest', tags: 'saran pengaturan settings suggest' },
+            { name: 'settings_accessibility', tags: 'aksesibilitas accessibility settings' },
+            { name: 'settings_backup_restore', tags: 'backup restore settings data' },
+            { name: 'logout', tags: 'keluar logout sign out' },
+            { name: 'login', tags: 'masuk login sign in' },
+            { name: 'swap_vert', tags: 'tukar vertikal swap vertical exchange' },
+            { name: 'swap_horiz', tags: 'tukar horizontal swap horizontal exchange' },
+            { name: 'open_in_new', tags: 'buka di tab baru open in new external' },
+            { name: 'open_with', tags: 'buka dengan open with choose app' },
+            { name: 'home_app_logo', tags: 'logo aplikasi home app icon' },
+            { name: 'info', tags: 'informasi info detail' },
+            { name: 'warning', tags: 'peringatan warning caution alert' },
+            { name: 'error', tags: 'error kesalahan danger alert' },
+            { name: 'help', tags: 'bantuan help support question' },
+            { name: 'tips_and_updates', tags: 'tips dan pembaruan tips updates idea' },
+            { name: 'star', tags: 'bintang star favorit rating' },
+            { name: 'star_half', tags: 'bintang setengah star half rating' },
+            { name: 'grade', tags: 'nilai grade rating score' },
+            { name: 'visibility', tags: 'lihat visibility show view' },
+            { name: 'visibility_off', tags: 'sembunyikan visibility off hide' },
+            { name: 'lock', tags: 'kunci lock secure keamanan' },
+            { name: 'lock_open', tags: 'kunci terbuka lock open unlock' },
+            { name: 'manage_accounts', tags: 'kelola akun manage accounts profile' },
+            { name: 'verified', tags: 'terverifikasi verified check badge' },
+            { name: 'priority_high', tags: 'prioritas tinggi priority high alert' },
+            { name: 'lightbulb_circle', tags: 'ide lightbulb circle inspiration' },
+            { name: 'ads_click', tags: 'klik iklan ads click marketing' },
+            { name: 'bolt', tags: 'petir bolt energi fast power' },
+            { name: 'extension', tags: 'ekstensi extension plugin add-on' },
+            { name: 'history', tags: 'riwayat history log waktu' },
+            { name: 'hourglass_empty', tags: 'jam pasir kosong hourglass empty waiting' },
+            { name: 'hourglass_full', tags: 'jam pasir penuh hourglass full time' },
+            { name: 'build_circle', tags: 'bangun build circle konstruksi settings' },
+            { name: 'reorder', tags: 'susun ulang reorder list sort' },
+            { name: 'update', tags: 'pembaruan update refresh system' },
+            { name: 'upgrade', tags: 'tingkatkan upgrade improvement level up' },
+            { name: 'fingerprint', tags: 'sidik jari fingerprint security unlock' },
+            { name: 'translate', tags: 'terjemahkan translate language bahasa' }
+        ],
+        content: [
+            { name: 'content_copy', tags: 'salin copy duplikasi content' },
+            { name: 'cut', tags: 'potong cut trim edit' },
+            { name: 'content_cut', tags: 'potong cut konten edit' },
+            { name: 'content_paste', tags: 'tempel paste content insert' },
+            { name: 'save', tags: 'simpan save file document' },
+            { name: 'cloud_done', tags: 'cloud selesai cloud done synced' },
+            { name: 'cloud_upload', tags: 'unggah upload cloud kirim' },
+            { name: 'cloud_download', tags: 'unduh download cloud file' },
+            { name: 'delete', tags: 'hapus delete remove trash' },
+            { name: 'delete_forever', tags: 'hapus permanen delete forever remove' },
+            { name: 'backspace', tags: 'hapus karakter backspace undo typing' },
+            { name: 'undo', tags: 'kembali undo revert' },
+            { name: 'redo', tags: 'ulang redo repeat' },
+            { name: 'text_format', tags: 'format teks text formatting style' },
+            { name: 'font_download', tags: 'unduh font download typeface typography' },
+            { name: 'format_bold', tags: 'tebal bold format text' },
+            { name: 'format_italic', tags: 'miring italic format text' },
+            { name: 'format_underlined', tags: 'garis bawah underline text formatting' },
+            { name: 'format_align_left', tags: 'rata kiri align left text' },
+            { name: 'format_align_center', tags: 'rata tengah align center text' },
+            { name: 'format_align_right', tags: 'rata kanan align right text' },
+            { name: 'format_align_justify', tags: 'justify rata penuh text formatting' },
+            { name: 'format_list_bulleted', tags: 'daftar poin bullets list' },
+            { name: 'format_list_numbered', tags: 'daftar nomor numbered list' },
+            { name: 'insert_photo', tags: 'sisip foto insert photo image' },
+            { name: 'insert_chart', tags: 'sisip grafik insert chart diagram' },
+            { name: 'insert_link', tags: 'sisip tautan insert link url' },
+            { name: 'insert_emoticon', tags: 'sisip emoticon emoji smiley' },
+            { name: 'table_chart', tags: 'tabel chart data spreadsheet' },
+            { name: 'border_color', tags: 'warna border garis color edit' },
+            { name: 'border_all', tags: 'border semua grid table layout' },
+            { name: 'brush', tags: 'kuas brush editing drawing' },
+            { name: 'palette', tags: 'palet warna palette color scheme' },
+            { name: 'draw', tags: 'gambar draw sketsa doodle' },
+            { name: 'image', tags: 'gambar image foto media' },
+            { name: 'crop', tags: 'potong crop gambar edit' },
+            { name: 'crop_free', tags: 'crop bebas free crop resize' },
+            { name: 'crop_square', tags: 'crop persegi square image' },
+            { name: 'filter', tags: 'filter efek edit photo' },
+            { name: 'filter_alt', tags: 'filter alternatif alt selective' },
+            { name: 'tune', tags: 'atur tune adjust setting' },
+            { name: 'adjust', tags: 'atur adjust brightness contrast' },
+            { name: 'style', tags: 'gaya style desain theme' },
+            { name: 'color_lens', tags: 'lensa warna color lens palette' },
+            { name: 'wallpaper', tags: 'wallpaper latar belakang background' },
+            { name: 'animation', tags: 'animasi animation motion' },
+            { name: 'burst_mode', tags: 'burst mode foto cepat kamera' },
+            { name: 'hdr_auto', tags: 'hdr otomatis hdr auto camera' },
+            { name: 'panorama', tags: 'panorama wide photo landscape' },
+            { name: 'slideshow', tags: 'slideshow tayangan presentasi gambar' }
+        ],
+        navigation: [
+            { name: 'menu', tags: 'menu navigasi daftar options' },
+            { name: 'apps', tags: 'aplikasi apps grid launcher' },
+            { name: 'more_vert', tags: 'lebih banyak more vert menu options' },
+            { name: 'more_horiz', tags: 'lebih banyak more horiz menu options' },
+            { name: 'arrow_back', tags: 'panah kembali arrow back previous' },
+            { name: 'arrow_forward', tags: 'panah maju arrow forward next' },
+            { name: 'arrow_upward', tags: 'panah atas arrow up scroll top' },
+            { name: 'arrow_downward', tags: 'panah bawah arrow down scroll' },
+            { name: 'chevron_left', tags: 'chevron kiri left navigation' },
+            { name: 'chevron_right', tags: 'chevron kanan right navigation' },
+            { name: 'expand_more', tags: 'lebih banyak expand more dropdown' },
+            { name: 'expand_less', tags: 'lebih sedikit expand less collapse' },
+            { name: 'fullscreen', tags: 'layar penuh fullscreen expand view' },
+            { name: 'fullscreen_exit', tags: 'keluar fullscreen exit minimize' },
+            { name: 'unfold_more', tags: 'buka lebih unfold more expand' },
+            { name: 'unfold_less', tags: 'buka sedikit unfold less collapse' },
+            { name: 'refresh', tags: 'segarkan refresh reload page' },
+            { name: 'first_page', tags: 'halaman pertama first page start' },
+            { name: 'last_page', tags: 'halaman terakhir last page end' },
+            { name: 'subdirectory_arrow_right', tags: 'submenu kanan subdirectory arrow right' },
+            { name: 'subdirectory_arrow_left', tags: 'submenu kiri subdirectory arrow left' },
+            { name: 'home_work', tags: 'kantor rumah home work building' },
+            { name: 'explore', tags: 'jelajah explore compass discover' },
+            { name: 'explore_off', tags: 'jelajah off explore disabled compass' }
+        ],
+        maps: [
+            { name: 'map', tags: 'peta map navigasi lokasi' },
+            { name: 'location_on', tags: 'lokasi aktif location on marker pin' },
+            { name: 'location_off', tags: 'lokasi mati location off disabled' },
+            { name: 'location_searching', tags: 'mencari lokasi location searching gps' },
+            { name: 'location_disabled', tags: 'lokasi dinonaktifkan location disabled gps off' },
+            { name: 'near_me', tags: 'di dekat saya near me lokasi sekitar' },
+            { name: 'place', tags: 'tempat place lokasi pin' },
+            { name: 'local_hospital', tags: 'rumah sakit hospital medis emergency' },
+            { name: 'local_police', tags: 'polisi kantor polisi local police keamanan' },
+            { name: 'local_fire_department', tags: 'pemadam kebakaran fire department emergency' },
+            { name: 'local_post_office', tags: 'kantor pos post office mail' },
+            { name: 'local_florist', tags: 'toko bunga florist flower shop' },
+            { name: 'local_library', tags: 'perpustakaan library education books' },
+            { name: 'local_mall', tags: 'mall pusat perbelanjaan lokal mall' },
+            { name: 'local_movies', tags: 'bioskop local movies cinema film' },
+            { name: 'local_laundry_service', tags: 'jasa laundry local laundry service cleaning' },
+            { name: 'local_offer', tags: 'penawaran lokal local offer promo' },
+            { name: 'zoom_in_map', tags: 'zoom masuk zoom in map enlarge' },
+            { name: 'zoom_out_map', tags: 'zoom keluar zoom out map shrink' },
+            { name: 'directions', tags: 'petunjuk arah directions navigasi' },
+            { name: 'directions_run', tags: 'arah lari directions run jogging' },
+            { name: 'directions_walk', tags: 'arah jalan directions walk foot' },
+            { name: 'directions_bus', tags: 'arah bus directions bus transport' },
+            { name: 'directions_car', tags: 'arah mobil directions car drive' },
+            { name: 'local_shipping', tags: 'pengiriman lokal shipping delivery cargo' },
+            { name: 'delivery_dining', tags: 'antar makanan delivery dining food' },
+            { name: 'run_circle', tags: 'lari lingkaran run circle activity' },
+            { name: 'emergency', tags: 'darurat emergency bantuan' },
+            { name: 'terrain', tags: 'medan terrain peta kontur landscape' },
+            { name: 'satellite', tags: 'satelit satellite citra map' }
+        ],
+        miscellaneous: [
+            { name: 'pets', tags: 'hewan peliharaan pets animals' },
+            { name: 'child_care', tags: 'pengasuhan anak child care baby' },
+            { name: 'child_friendly', tags: 'ramah anak child friendly kids' },
+            { name: 'toys', tags: 'mainan toys kids play' },
+            { name: 'music_note', tags: 'nada musik music note sound' },
+            { name: 'music_video', tags: 'video musik music video clip' },
+            { name: 'movie', tags: 'film movie cinema' },
+            { name: 'theaters', tags: 'teater theaters bioskop movie' },
+            { name: 'book_online', tags: 'pesan online book online ticket' },
+            { name: 'local_activity', tags: 'aktivitas lokal local activity events' },
+            { name: 'celebration', tags: 'perayaan celebration party event' },
+            { name: 'cake', tags: 'kue cake dessert sweet' },
+            { name: 'party_mode', tags: 'mode pesta party mode fun' },
+            { name: 'stars', tags: 'bintang stars rating night' },
+            { name: 'auto_awesome', tags: 'keren auto awesome magic effect' },
+            { name: 'auto_awesome_mosaic', tags: 'mozaik mosaic auto awesome pattern' },
+            { name: 'auto_fix_high', tags: 'perbaikan tinggi auto fix high edit' },
+            { name: 'auto_fix_normal', tags: 'perbaikan normal auto fix normal edit' },
+            { name: 'auto_fix_off', tags: 'perbaikan mati auto fix off disabled' },
+            { name: 'magic_button', tags: 'tombol ajaib magic button special' },
+            { name: 'bubble_chart', tags: 'diagram gelembung bubble chart data' },
+            { name: 'insights', tags: 'wawasan insights analisis data' },
+            { name: 'psychology', tags: 'psikologi psychology mind behavior' },
+            { name: 'science', tags: 'sains science eksperimen lab' },
+            { name: 'sports', tags: 'olahraga sports activity fitness' },
+            { name: 'downhill_skiing', tags: 'ski turun downhill skiing snow sport' },
+            { name: 'surfing', tags: 'selancar surfing wave ocean' },
+            { name: 'kayaking', tags: 'kayak kayaking boat paddle' },
+            { name: 'paragliding', tags: 'paralayang paragliding fly adventure' },
+            { name: 'skateboarding', tags: 'skateboard skateboarding trick sport' },
+            { name: 'snowboarding', tags: 'snowboard snowboarding winter sport' },
+            { name: 'snowshoeing', tags: 'jalan salju snowshoeing winter walk' },
+            { name: 'smoking_rooms', tags: 'ruang merokok smoking rooms allowed' },
+            { name: 'smoke_free', tags: 'bebas rokok smoke free no smoking' },
+            { name: 'vaping_rooms', tags: 'ruang vaping vaping rooms allowed' }
+        ]
     };
 
     const categoryLabels = {
@@ -619,41 +981,49 @@ $user_data = $u_res->fetch_assoc();
 
         let iconsToRender = [];
 
+        // Gabungkan array jika kategori 'all'
         if (activeCategory === 'all') {
-            // Gabungkan semua array menjadi satu array flat
             iconsToRender = Object.values(availableIcons).flat();
         } else {
-            // Ambil array dari kategori spesifik
             iconsToRender = availableIcons[activeCategory] || [];
         }
 
-        // Filter berdasarkan teks search
-        const filteredIcons = iconsToRender.filter(icon => 
-            icon.toLowerCase().includes(filterText.toLowerCase())
-        );
+        // --- FILTER PINTAR (SMART SEARCH) ---
+        // Mencari teks di dalam 'name' DAN 'tags'
+        const lowerFilter = filterText.toLowerCase();
+        
+        const filteredIcons = iconsToRender.filter(item => {
+            // Jika item masih string lama (backward compatibility), ubah jadi object sementara
+            const iconName = typeof item === 'string' ? item : item.name;
+            const iconTags = typeof item === 'string' ? item : (item.tags || '');
+
+            return iconName.toLowerCase().includes(lowerFilter) || 
+                   iconTags.toLowerCase().includes(lowerFilter);
+        });
 
         if (filteredIcons.length === 0) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; font-size:0.8rem; padding:10px;">Ikon tidak ditemukan</div>';
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; font-size:0.8rem; padding:10px;">Ikon tidak ditemukan. Coba kata kunci lain (misal: "makan", "gaji").</div>';
             return;
         }
 
-        // Batasi jumlah render jika terlalu banyak (opsional, untuk performa)
-        // const limit = 200; 
-        // const finalIcons = filteredIcons.slice(0, limit);
-
-        filteredIcons.forEach(icon => {
+        filteredIcons.forEach(item => {
+            // Handle jika data masih ada yang string
+            const iconName = typeof item === 'string' ? item : item.name;
             const div = document.createElement('div');
-            const isSelected = (icon === selectedIcon); 
+            
+            const isSelected = (iconName === selectedIcon); 
             div.className = `icon-option ${isSelected ? 'selected' : ''}`;
             
             // Render Google Icons
-            div.innerHTML = `<span class="material-symbols-rounded" style="font-size: 24px;">${icon}</span>`;
-            div.title = icon;
+            div.innerHTML = `<span class="material-symbols-rounded" style="font-size: 24px;">${iconName}</span>`;
+            
+            // Tampilkan tooltip nama saat hover (opsional)
+            div.title = iconName;
             
             div.onclick = function() {
                 document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
                 div.classList.add('selected');
-                input.value = icon;
+                input.value = iconName; // Simpan nama ikonnya saja ke database
             };
             grid.appendChild(div);
         });
@@ -662,7 +1032,12 @@ $user_data = $u_res->fetch_assoc();
     function filterIcons() {
         const searchText = document.getElementById('iconSearchInput').value;
         const currentSelectedIcon = document.getElementById('edit_cat_icon_input').value;
-        if(searchText.length > 0) activeCategory = 'all'; renderCategoryChips();
+        
+        // Jika sedang mencari, otomatis pindah ke kategori 'Semua' agar pencarian lebih luas
+        if(searchText.length > 0 && activeCategory !== 'all') {
+            activeCategory = 'all'; 
+            renderCategoryChips();
+        }
         
         renderIcons(currentSelectedIcon, searchText);
     }
