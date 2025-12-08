@@ -141,7 +141,7 @@ $user_data = $u_res->fetch_assoc();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
-
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         /* Style Tambahan untuk Pilihan Icon */
@@ -189,6 +189,27 @@ $user_data = $u_res->fetch_assoc();
         .icon-option:hover { background: #f1f5f9; }
         .icon-option.selected { background: #4f46e5; color: white; border-color: #4f46e5; }
         .shortcut-badge { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+
+        .chip-btn {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #64748b;
+            padding: 4px 10px;       /* Padding Dikecilkan */
+            border-radius: 20px;
+            font-size: 0.7rem;       /* Font Dikecilkan */
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+        }
+        .chip-btn:hover { background: #f1f5f9; }
+        .chip-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        
     </style>
 </head>
 <body>
@@ -266,7 +287,15 @@ $user_data = $u_res->fetch_assoc();
                         ?>
                         <tr class="kategori-row" data-type="<?php echo $c['type']; ?>" style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:15px; width: 50px;">
-                                <i class='bx <?php echo $c['icon'] ?? 'bx-category'; ?>' style="font-size: 1.5rem; color: #64748b;"></i>
+                                <?php 
+                                    $iconName = $c['icon'] ?? 'bx-category';
+                                    // Cek apakah ikon dimulai dengan 'bx-' (Boxicons) atau tidak (Google Icons)
+                                    if (strpos($iconName, 'bx-') === 0) {
+                                        echo "<i class='bx $iconName' style='font-size: 1.5rem; color: #64748b;'></i>";
+                                    } else {
+                                        echo "<span class='material-symbols-rounded' style='font-size: 1.5rem; color: #64748b;'>$iconName</span>";
+                                    }
+                                ?>
                             </td>
                             <td style="padding:15px;">
                                 <span class="badge-tipe <?php echo ($c['type']=='pemasukan')?'badge-in':'badge-out'; ?>">
@@ -349,6 +378,8 @@ $user_data = $u_res->fetch_assoc();
                     <i class='bx bx-search'></i>
                     <input type="text" id="iconSearchInput" class="icon-search-input" placeholder="Cari ikon..." onkeyup="filterIcons()">
                 </div>
+                <div id="categoryChips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                    </div>
                 <div class="icon-grid" id="iconGrid">
                     </div>
             </div>
@@ -381,87 +412,223 @@ $user_data = $u_res->fetch_assoc();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
-    const availableIcons = [
-        // === KEUANGAN, BISNIS & BELANJA ===
-        'bx-money', 'bx-wallet', 'bx-wallet-alt', 'bx-credit-card', 'bx-credit-card-alt', 
-        'bx-dollar', 'bx-dollar-circle', 'bx-bitcoin', 'bx-euro', 'bx-yen', 'bx-pound', 'bx-ruble', 'bx-rupee',
-        'bx-cart', 'bx-cart-alt', 'bx-shopping-bag', 'bx-basket', 'bx-store', 'bx-store-alt', 'bx-shop',
-        'bx-purchase-tag', 'bx-purchase-tag-alt', 'bx-barcode', 'bx-receipt', 'bx-calculator', 
-        'bx-bank', 'bx-building-house', 'bx-buildings', 'bx-home', 'bx-home-circle',
-        'bx-briefcase', 'bx-briefcase-alt', 'bx-archive', 'bx-box', 'bx-package', 'bx-gift',
-        'bx-line-chart', 'bx-bar-chart', 'bx-bar-chart-alt', 'bx-bar-chart-square', 'bx-pie-chart', 
-        'bx-pie-chart-alt', 'bx-trending-up', 'bx-trending-down', 'bx-coin', 'bx-coin-stack', 
-        'bx-diamond', 'bx-crown', 'bx-award', 'bx-badge', 'bx-star', 'bx-trophy', 'bx-medal',
+    const availableIcons = {
 
-        // === MAKANAN & MINUMAN ===
-        'bx-food-menu', 'bx-restaurant', 'bx-coffee', 'bx-coffee-togo', 'bx-beer', 'bx-drink', 'bx-water', 
-        'bx-wine', 'bx-martini', 'bx-bowl-rice', 'bx-bowl-hot', 'bx-cookie', 'bx-cake', 
-        'bx-baguette', 'bx-dish', 'bx-fridge', 'bx-cheese', 'bx-pizza', 'bx-popsicle',
+    // ===========================
+    // KEUANGAN & BELANJA
+    // ===========================
+    finance: [
+        'payments','account_balance_wallet','credit_card','attach_money','monetization_on',
+        'currency_bitcoin','receipt_long','calculate','savings','paid','store','local_offer',
+        'redeem','shopping_cart','shopping_bag','shopping_basket','price_change',
+        'price_check','receipt','point_of_sale','add_card','atm','barcode_reader','wallet',
+        'card_membership','card_giftcard','loyalty','request_quote','trending_up','trending_down',
+        'trending_flat','account_balance','account_tree','analytics','bar_chart','leaderboard',
+        'account_balance','balance','insights','stacked_line_chart','query_stats'
+    ],
 
-        // === TRANSPORTASI & PERJALANAN ===
-        'bx-car', 'bx-bus', 'bx-bus-school', 'bx-taxi', 'bx-train', 'bx-train-subway', 'bx-cycling', 
-        'bx-walk', 'bx-run', 'bx-gas-pump', 'bx-charging-station', 'bx-map', 'bx-map-pin', 'bx-map-alt',
-        'bx-navigation', 'bx-compass', 'bx-rocket', 'bx-plane', 'bx-plane-alt', 'bx-plane-take-off', 
-        'bx-plane-land', 'bx-anchor', 'bx-ship', 'bx-traffic-cone', 'bx-hotel', 'bx-trip', 'bx-world', 
-        'bx-globe', 'bx-planet', 'bx-flag',
+    // ===========================
+    // MAKANAN & MINUMAN
+    // ===========================
+    food: [
+        'restaurant','grocery','local_dining','lunch_dining','fastfood','bakery_dining','local_cafe',
+        'local_bar','local_pizza','icecream','ramen_dining','kitchen','egg','water_drop',
+        'local_drink','set_meal','dinner_dining','brunch_dining','rice_bowl','flatware','fork_spoon','hanami_dango','coffee','wine_bar',
+        'liquor','tapas','outdoor_grill','cookie','nutrition','emoji_food_beverage'
+    ],
 
-        // === TEKNOLOGI & GADGET ===
-        'bx-mobile', 'bx-mobile-alt', 'bx-mobile-vibration', 'bx-phone', 'bx-phone-call', 'bx-phone-incoming',
-        'bx-laptop', 'bx-desktop', 'bx-mouse', 'bx-mouse-alt', 'bx-keyboard', 'bx-headphone', 'bx-speaker',
-        'bx-camera', 'bx-camera-movie', 'bx-video', 'bx-video-recording', 'bx-webcam', 'bx-microphone',
-        'bx-wifi', 'bx-wifi-off', 'bx-bluetooth', 'bx-cast', 'bx-hdd', 'bx-memory-card', 'bx-microchip', 'bx-chip',
-        'bx-usb', 'bx-plug', 'bx-server', 'bx-data', 'bx-cloud', 'bx-cloud-upload', 'bx-cloud-download',
-        'bx-tv', 'bx-broadcast', 'bx-radar', 'bx-station', 'bx-satellite', 'bx-game', 'bx-joystick', 'bx-joystick-alt',
+    // ===========================
+    // TRANSPORTASI
+    // ===========================
+    transportation: [
+        'directions_car','directions_bus','train','tram','subway','directions_railway',
+        'local_taxi','pedal_bike','directions_walk','flight','airport_shuttle','hotel',
+        'commute','map','navigation','local_gas_station','ev_station','scooter','sailing',
+        'directions_boat','rv_hookup','car_rental','car_crash','bus_alert','airline_seat_recline_normal',
+        'airline_seat_individual_suite','airplane_ticket','connecting_airports'
+    ],
 
-        // === RUMAH, UTILITAS & KELUARGA ===
-        'bx-home-heart', 'bx-bed', 'bx-bath', 'bx-chair', 'bx-cabinet', 'bx-door-open', 'bx-window',
-        'bx-bulb', 'bx-trash', 'bx-trash-alt', 'bx-wrench', 'bx-hammer', 'bx-paint', 'bx-brush', 'bx-spray-can',
-        'bx-palette', 'bx-cut', 'bx-ruler', 'bx-pencil', 'bx-pen', 'bx-edit', 'bx-edit-alt',
-        'bx-key', 'bx-lock', 'bx-lock-open', 'bx-lock-alt', 'bx-shield', 'bx-shield-alt-2', 'bx-cctv',
-        'bx-baby-carriage', 'bx-male', 'bx-female', 'bx-user', 'bx-user-circle', 'bx-group', 
-        'bx-face', 'bx-happy', 'bx-happy-alt', 'bx-sad', 'bx-sleepy', 'bx-shocked', 'bx-cool',
+    // ===========================
+    // TEKNOLOGI & GADGET
+    // ===========================
+    tech: [
+        'smartphone','phone_iphone','phone_android','laptop','desktop_windows','desktop_mac',
+        'headphones','camera_alt','videocam','tv','keyboard','mouse','router','bluetooth',
+        'wifi','memory','sd_card','print','speaker','watch','devices','cast','monitor',
+        'security','usb','mouse','keyboard_alt','gamepad','mic','mic_none','mic_off',
+        'headphones_battery','battery_full','battery_5_bar','battery_3_bar','battery_saver',
+        'brightness_auto','dark_mode','light_mode','contrast','data_usage','signal_cellular_alt','cloud',
+        'cloud_sync','cloud_download','cloud_upload','cloud_off','dns','qr_code','qr_code_scanner',
+        'barcode','storage','hub','device_unknown','headset_mic'
+    ],
 
-        // === KESEHATAN & OLAHRAGA ===
-        'bx-heart', 'bx-heart-circle', 'bx-pulse', 'bx-plus-medical', 'bx-first-aid', 'bx-health', 
-        'bx-capsule', 'bx-injection', 'bx-dna', 'bx-virus', 'bx-bacteria', 'bx-bandage',
-        'bx-dumbbell', 'bx-football', 'bx-basketball', 'bx-tennis-ball', 'bx-bowling-ball', 'bx-baseball', 
-        'bx-swim', 'bx-body', 'bx-brain', 'bx-spa', 'bx-timer', 'bx-stopwatch',
+    // ===========================
+    // RUMAH & KEBUTUHAN
+    // ===========================
+    home: [
+        'home','chair','bed','bathtub','lightbulb','chair_alt','house_siding','cottage',
+        'villa','weekend','window','door_front','yard','vacuum','cleaning_services','build',
+        'plumbing','electrical_services','carpenter','handyman','roofing','grass','fireplace',
+        'ac_unit','air_purifier','heat_pump','iron','local_laundry_service','dry','kitchen',
+        'oven_gen','cooking','dishwasher','microwave','heat','oven','oven_gen','skillet','skillet_cooktop','stockpot','range_hood'
+    ],
 
-        // === PENDIDIKAN & KANTOR ===
-        'bx-book', 'bx-book-open', 'bx-book-heart', 'bx-book-bookmark', 'bx-bookmarks', 'bx-library',
-        'bx-notepad', 'bx-note', 'bx-paste', 'bx-copy', 'bx-file', 'bx-file-blank', 'bx-folder', 'bx-folder-open',
-        'bx-envelope', 'bx-envelope-open', 'bx-send', 'bx-mail-send', 'bx-message', 'bx-message-dots',
-        'bx-calendar', 'bx-calendar-check', 'bx-calendar-event', 'bx-time', 'bx-time-five', 'bx-alarm', 'bx-bell',
-        'bx-paperclip', 'bx-pin', 'bx-link', 'bx-link-external', 'bx-printer', 'bx-id-card', 'bx-search', 'bx-search-alt',
+    // ===========================
+    // KESEHATAN & OLAHRAGA
+    // ===========================
+    health: [
+        'favorite','favorite_border','monitor_heart','medical_services','medication','medication_liquid',
+        'healing','health_and_safety','vaccines','coronavirus','masks','thermostat','bloodtype',
+        'fitness_center','sports_soccer','sports_basketball','sports_tennis','sports_volleyball',
+        'sports_mma','sports_kabaddi','sports_esports','pool','directions_run','directions_bike',
+        'pedal_bike','person_add','self_improvement','emoji_people'
+    ],
 
-        // === ALAM & CUACA ===
-        'bx-sun', 'bx-moon', 'bx-cloud-rain', 'bx-cloud-lightning', 'bx-cloud-snow', 'bx-wind', 
-        'bx-leaf', 'bx-tree', 'bx-flower', 'bx-landscape', 'bx-bug', 'bx-dog', 'bx-cat', 'bx-bone',
-        'bx-fire', 'bx-water',
+    // ===========================
+    // PENDIDIKAN & PERKANTORAN
+    // ===========================
+    office: [
+        'menu_book','edit','description','folder','folder_open','create_new_folder','drive_file_move',
+        'calendar_month','schedule','alarm','notifications','person','groups','badge','print','work',
+        'school','auto_stories','library_books','library_add','fact_check','rule','task_alt','checklist',
+        'edit_note','note','sticky_note_2','assignment','draft','approval','bookmark','book','meeting_room',
+        'event','event_available','event_note','note_add','workspaces','workspace_premium'
+    ],
 
-        // === MEDIA & SOSIAL ===
-        'bx-music', 'bx-play', 'bx-play-circle', 'bx-pause', 'bx-stop', 'bx-rewind', 'bx-fast-forward',
-        'bx-volume-full', 'bx-volume-mute', 'bx-like', 'bx-dislike', 'bx-comment', 'bx-share', 'bx-share-alt',
-        'bx-image', 'bx-images', 'bx-slideshow', 'bx-film', 'bx-movie-play',
+    // ===========================
+    // SOSIAL, KOMUNIKASI & MEDIA
+    // ===========================
+    social: [
+        'chat','chat_bubble','sms','call','call_end','call_made','call_received','call_missed',
+        'contacts','contact_page','email','mark_email_unread','forum','groups','group_add','share',
+        'share_location','public','language','person_add','person_remove','person_pin','face','face_retouching_natural',
+        'mood','mood_bad','emoji_emotions','emoji_events','emoji_objects','thumb_up','thumb_down',
+        'handshake','diversity_1','diversity_2','diversity_3','sentiment_satisfied','sentiment_dissatisfied',
+        'sentiment_very_satisfied','sentiment_very_dissatisfied','support','live_help'
+    ],
 
-        // === SIMBOL & LAINNYA ===
-        'bx-check', 'bx-check-circle', 'bx-check-double', 'bx-x', 'bx-x-circle', 
-        'bx-plus', 'bx-plus-circle', 'bx-minus', 'bx-minus-circle', 'bx-question-mark', 'bx-info-circle',
-        'bx-error', 'bx-error-circle', 'bx-warning', 'bx-notification', 'bx-power-off', 'bx-log-out', 'bx-log-in',
-        'bx-grid-alt', 'bx-list-ul', 'bx-list-ol', 'bx-menu', 'bx-dots-horizontal', 'bx-dots-vertical',
-        'bx-chevron-up', 'bx-chevron-down', 'bx-chevron-left', 'bx-chevron-right',
-        'bx-sort', 'bx-filter', 'bx-filter-alt', 'bx-slider', 'bx-slider-alt',
-        'bx-toggle-left', 'bx-toggle-right', 'bx-radio-circle', 'bx-checkbox-checked'
-    ];
+    // ===========================
+    // AKSI / ACTION ICONS
+    // ===========================
+    action: [
+        'add','remove','close','done','check','check_circle','done_all','refresh','autorenew','settings',
+        'settings_suggest','settings_accessibility','settings_backup_restore','logout','login','swap_vert',
+        'swap_horiz','open_in_new','open_with','home_app_logo','info','warning','error','help','tips_and_updates',
+        'star','star_half','grade','visibility','visibility_off','lock','lock_open','manage_accounts','verified',
+        'priority_high','lightbulb_circle','ads_click','bolt','extension','history','hourglass_empty',
+        'hourglass_full','build_circle','reorder','update','upgrade','fingerprint','translate'
+    ],
+
+    // ===========================
+    // KONTEN / EDITOR / UTILITAS
+    // ===========================
+    content: [
+        'content_copy','content_copy','cut','content_cut','content_paste','save','cloud_done','cloud_upload',
+        'cloud_download','delete','delete_forever','backspace','undo','redo','text_format','font_download',
+        'format_bold','format_italic','format_underlined','format_align_left','format_align_center',
+        'format_align_right','format_align_justify','format_list_bulleted','format_list_numbered','insert_photo',
+        'insert_chart','insert_link','insert_emoticon','table_chart','border_color','border_all','brush','palette',
+        'draw','image','crop','crop_free','crop_square','filter','filter_alt','tune','adjust','style','color_lens',
+        'wallpaper','animation','burst_mode','hdr_auto','panorama','slideshow'
+    ],
+
+    // ===========================
+    // NAVIGASI
+    // ===========================
+    navigation: [
+        'menu','apps','more_vert','more_horiz','arrow_back','arrow_forward','arrow_upward','arrow_downward',
+        'chevron_left','chevron_right','expand_more','expand_less','fullscreen','fullscreen_exit','unfold_more',
+        'unfold_less','refresh','first_page','last_page','subdirectory_arrow_right','subdirectory_arrow_left',
+        'home_work','explore','explore_off'
+    ],
+
+    // ===========================
+    // MAPS & LOKASI
+    // ===========================
+    maps: [
+        'map','location_on','location_off','location_searching','location_disabled','near_me','place',
+        'local_hospital','local_police','local_fire_department','local_post_office','local_florist',
+        'local_library','local_mall','local_movies','local_laundry_service','local_offer','zoom_in_map',
+        'zoom_out_map','directions','directions_run','directions_walk','directions_bus','directions_car',
+        'local_shipping','delivery_dining','run_circle','emergency','terrain','satellite'
+    ],
+
+    // ===========================
+    // MISC & LAINNYA
+    // ===========================
+    miscellaneous: [
+        'pets','child_care','child_friendly','toys','music_note','music_video','movie','theaters',
+        'book_online','local_activity','celebration','cake','party_mode','stars','auto_awesome',
+        'auto_awesome_mosaic','auto_fix_high','auto_fix_normal','auto_fix_off','magic_button',
+        'bubble_chart','insights','psychology','science','sports','downhill_skiing','surfing',
+        'kayaking','paragliding','skateboarding','snowboarding','snowshoeing','smoking_rooms','smoke_free','vaping_rooms'
+    ]
+
+    };
+
+    const categoryLabels = {
+        'finance': 'Keuangan', 'food': 'Makanan', 'transportation': 'Transportasi',
+        'tech': 'Gadget', 'home': 'Rumah', 'health': 'Kesehatan', 'office': 'Kantor',
+        'social': 'Sosial', 'action': 'Aksi', 'content': 'Konten', 'navigation': 'Navigasi',
+        'maps': 'Peta', 'miscellaneous': 'Lainnya'
+    };
+
+    let activeCategory = 'all';
+
+    function renderCategoryChips() {
+        const chipsContainer = document.getElementById('categoryChips');
+        chipsContainer.innerHTML = '';
+
+        // Chip "Semua"
+        const allBtn = document.createElement('button');
+        allBtn.type = 'button';
+        allBtn.className = `chip-btn ${activeCategory === 'all' ? 'active' : ''}`;
+        allBtn.innerText = 'Semua';
+        allBtn.onclick = () => { setActiveCategory('all'); };
+        chipsContainer.appendChild(allBtn);
+
+        // Chip Kategori Lainnya
+        for (const [key, icons] of Object.entries(availableIcons)) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `chip-btn ${activeCategory === key ? 'active' : ''}`;
+            btn.innerText = categoryLabels[key] || key; // Pakai label mapping atau key asli
+            btn.onclick = () => { setActiveCategory(key); };
+            chipsContainer.appendChild(btn);
+        }
+    }
+
+    function setActiveCategory(cat) {
+        activeCategory = cat;
+        renderCategoryChips(); // Re-render chips untuk update class active
+        
+        // Reset search bar saat ganti kategori
+        document.getElementById('iconSearchInput').value = '';
+        
+        // Ambil input hidden value ikon yang terpilih saat ini
+        const currentSelected = document.getElementById('edit_cat_icon_input').value;
+        renderIcons(currentSelected); // Render ulang grid
+    }
+
 
 
     function renderIcons(selectedIcon, filterText = '') {
         const grid = document.getElementById('iconGrid');
         const input = document.getElementById('edit_cat_icon_input');
-        grid.innerHTML = ''; // Reset grid
+        grid.innerHTML = ''; 
 
-        // Filter array ikon berdasarkan teks pencarian
-        const filteredIcons = availableIcons.filter(icon => 
+        let iconsToRender = [];
+
+        if (activeCategory === 'all') {
+            // Gabungkan semua array menjadi satu array flat
+            iconsToRender = Object.values(availableIcons).flat();
+        } else {
+            // Ambil array dari kategori spesifik
+            iconsToRender = availableIcons[activeCategory] || [];
+        }
+
+        // Filter berdasarkan teks search
+        const filteredIcons = iconsToRender.filter(icon => 
             icon.toLowerCase().includes(filterText.toLowerCase())
         );
 
@@ -470,23 +637,23 @@ $user_data = $u_res->fetch_assoc();
             return;
         }
 
+        // Batasi jumlah render jika terlalu banyak (opsional, untuk performa)
+        // const limit = 200; 
+        // const finalIcons = filteredIcons.slice(0, limit);
+
         filteredIcons.forEach(icon => {
             const div = document.createElement('div');
-            // Cek apakah ikon ini adalah yang sedang dipilih
             const isSelected = (icon === selectedIcon); 
             div.className = `icon-option ${isSelected ? 'selected' : ''}`;
-            div.innerHTML = `<i class='bx ${icon}'></i>`;
+            
+            // Render Google Icons
+            div.innerHTML = `<span class="material-symbols-rounded" style="font-size: 24px;">${icon}</span>`;
+            div.title = icon;
             
             div.onclick = function() {
-                // Hapus class selected dari item lain di DOM saat ini
                 document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
-                // Tambah class ke item ini
                 div.classList.add('selected');
-                // Update hidden input
                 input.value = icon;
-                
-                // Simpan ikon terpilih ke variabel global (agar persist saat search)
-                // (Opsional, tergantung UX yang diinginkan)
             };
             grid.appendChild(div);
         });
@@ -495,24 +662,27 @@ $user_data = $u_res->fetch_assoc();
     function filterIcons() {
         const searchText = document.getElementById('iconSearchInput').value;
         const currentSelectedIcon = document.getElementById('edit_cat_icon_input').value;
+        if(searchText.length > 0) activeCategory = 'all'; renderCategoryChips();
+        
         renderIcons(currentSelectedIcon, searchText);
     }
     
-    // Update fungsi openEditCatModal agar mereset search bar
     function openEditCatModal(id, name, type, icon, isShortcut) {
         document.getElementById('edit_cat_id').value = id;
         document.getElementById('edit_cat_name').value = name;
         document.getElementById('edit_cat_type').value = type;
         document.getElementById('edit_cat_icon_input').value = icon;
         
-        // Reset Search Bar
+        // Reset UI
         document.getElementById('iconSearchInput').value = '';
+        activeCategory = 'all'; // Default balik ke semua atau bisa di deteksi dari icon kategori
         
         // Set Checkbox
-        document.getElementById('edit_cat_shortcut').checked = (isShortcut == 1);
+        const scCheckbox = document.getElementById('edit_cat_shortcut');
+        if(scCheckbox) scCheckbox.checked = (isShortcut == 1);
 
-        // Render Semua Ikon (Tanpa Filter Awal)
-        renderIcons(icon);
+        renderCategoryChips(); // Render Chips
+        renderIcons(icon);     // Render Grid
 
         const modal = document.getElementById('editCatModal');
         modal.style.display = 'flex';

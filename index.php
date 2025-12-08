@@ -17,6 +17,7 @@ if (!isset($_SESSION['user_id'])) {
     
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
     <style>
         body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f1f5f9; font-family: 'DM Sans', sans-serif; }
@@ -135,6 +136,7 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
     
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
@@ -428,7 +430,14 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
                 <button type="button" class="shortcut-btn <?php echo $sc['type']; ?>" 
                         onclick="fillTransaction('<?php echo $sc['type']; ?>', '<?php echo $sc['id']; ?>')">
                     <div class="shortcut-icon">
-                        <i class='bx <?php echo $sc['icon'] ?? 'bx-category'; ?>'></i>
+                        <?php 
+                            $iconName = $sc['icon'] ?? 'bx-category';
+                            if (strpos($iconName, 'bx-') === 0) {
+                                echo "<i class='bx $iconName'></i>";
+                            } else {
+                                echo "<span class='material-symbols-rounded'>$iconName</span>";
+                            }
+                        ?>
                     </div>
                     <span class="shortcut-name"><?php echo htmlspecialchars($sc['name']); ?></span>
                 </button>
