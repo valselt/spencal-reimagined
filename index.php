@@ -120,6 +120,9 @@ while($row = $query_pie_out->fetch_assoc()){ $label_pie_out[] = $row['name']; $d
 
 $cats_pemasukan = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pemasukan'");
 $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pengeluaran'");
+
+// --- BARU: QUERY SHORTCUT ---
+$shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND is_shortcut=1 ORDER BY type DESC, name ASC");
 ?>
 
 <!DOCTYPE html>
@@ -161,6 +164,31 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         @media (max-width: 968px) { 
             .charts-grid, .daily-details-grid { grid-template-columns: 1fr; } 
         }
+
+        /* STYLE BARU: SHORTCUT BUTTONS */
+        .shortcut-container {
+            display: flex; gap: 15px; overflow-x: auto; padding: 5px; margin-bottom: 20px;
+            /* Scrollbar hidden styling */
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .shortcut-container::-webkit-scrollbar { display: none; }
+        
+        .shortcut-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-width: 80px; cursor: pointer; border: none; background: none; transition: 0.2s;
+        }
+        .shortcut-icon {
+            width: 50px; height: 50px; border-radius: 16px; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        /* Warna berdasarkan tipe */
+        .shortcut-btn.pengeluaran .shortcut-icon { background: #fee2e2; color: #ef4444; }
+        .shortcut-btn.pemasukan .shortcut-icon { background: #dcfce7; color: #22c55e; }
+        
+        .shortcut-btn:hover .shortcut-icon { transform: translateY(-3px); }
+        .shortcut-name { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.2;}
 
         /* --- PERBAIKAN: CSS TOMBOL DIPINDAH KESINI --- */
         .flatpickr-calendar { 
@@ -393,10 +421,25 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
             </div>
         </div>
 
+        <?php if($shortcuts->num_rows > 0): ?>
+        <h2 class="section-title"><i class='bx bx-bolt-circle'></i> Akses Cepat</h2>
+        <div class="shortcut-container">
+            <?php while($sc = $shortcuts->fetch_assoc()): ?>
+                <button type="button" class="shortcut-btn <?php echo $sc['type']; ?>" 
+                        onclick="fillTransaction('<?php echo $sc['type']; ?>', '<?php echo $sc['id']; ?>')">
+                    <div class="shortcut-icon">
+                        <i class='bx <?php echo $sc['icon'] ?? 'bx-category'; ?>'></i>
+                    </div>
+                    <span class="shortcut-name"><?php echo htmlspecialchars($sc['name']); ?></span>
+                </button>
+            <?php endwhile; ?>
+        </div>
+        <?php endif; ?>
+
         <div class="input-section">
             <div class="card">
                 <h2 class="card-title"><i class='bx bx-plus-circle'></i> Input Transaksi</h2>
-                <form method="POST">
+                <form method="POST" id="transaksiForm">
                     <div class="form-group">
                         <label class="form-label">Tanggal</label>
                         <input type="text" name="tanggal" class="form-control" required placeholder="Pilih Tanggal...">
@@ -641,6 +684,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     function updateSubJenis() {
         const jenis = document.getElementById('jenis_transaksi').value;
         const subSelect = document.getElementById('sub_jenis');
+        const currentValue = subSelect.value;
         subSelect.innerHTML = '<option value="">Pilih Kategori...</option>';
         let data = (jenis === 'pengeluaran') ? katPengeluaran : katPemasukan;
         data.forEach(item => { let option = document.createElement('option'); option.value = item.id; option.text = item.name; subSelect.add(option); });
@@ -671,6 +715,23 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 });
         }
     }, 1000 * 60); // cek setiap 1 menit
+
+    // --- LOGIC SHORTCUT CLICK ---
+    function fillTransaction(type, catId) {
+        // 1. Set Tipe (Pemasukan/Pengeluaran)
+        document.getElementById('jenis_transaksi').value = type;
+        
+        // 2. Refresh Dropdown Kategori sesuai Tipe
+        updateSubJenis();
+        
+        // 3. Set Kategori ID
+        document.getElementById('sub_jenis').value = catId;
+        
+        // 4. Fokus ke Input Nominal & Scroll ke sana
+        const inputNominal = document.getElementById('rupiah_input');
+        inputNominal.focus();
+        inputNominal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
     // Ambil elemen input tanggal
     const dateInput = document.querySelector("input[name='tanggal']");

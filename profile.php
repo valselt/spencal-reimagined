@@ -81,12 +81,40 @@ if (isset($_POST['delete_account'])) {
 
 // --- LOGIC 3: CRUD KATEGORI ---
 $active_type = isset($_GET['type']) ? $_GET['type'] : 'pengeluaran';
+
+// A. LOGIC EDIT KATEGORI (UPDATE)
+if (isset($_POST['edit_cat'])) {
+    $id_cat = $_POST['edit_id'];
+    $new_name = htmlspecialchars($_POST['edit_name']);
+    $type_redirect = $_POST['edit_type'];
+    
+    // Tangkap data baru
+    $icon = $_POST['edit_icon'];
+    $is_shortcut = isset($_POST['edit_shortcut']) ? 1 : 0;
+
+    $stmt = $conn->prepare("UPDATE categories SET name = ?, icon = ?, is_shortcut = ? WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("ssiii", $new_name, $icon, $is_shortcut, $id_cat, $user_id);
+    
+    if ($stmt->execute()) {
+        $_SESSION['popup_status'] = 'success'; $_SESSION['popup_message'] = 'Kategori berhasil diperbarui!';
+    } else {
+        $_SESSION['popup_status'] = 'error'; $_SESSION['popup_message'] = 'Gagal mengubah kategori.';
+    }
+    header("Location: profile.php?tab=kategori&type=$type_redirect"); exit();
+}
+
+// B. LOGIC TAMBAH KATEGORI (UPDATE)
 if (isset($_POST['add_cat'])) {
-    $type = $_POST['cat_type']; $name = htmlspecialchars($_POST['cat_name']);
-    $conn->query("INSERT INTO categories (user_id, type, name) VALUES ('$user_id', '$type', '$name')");
+    $type = $_POST['cat_type']; 
+    $name = htmlspecialchars($_POST['cat_name']);
+    $def_icon = 'bx-category'; 
+    $def_short = 0;
+
+    $conn->query("INSERT INTO categories (user_id, type, name, icon, is_shortcut) VALUES ('$user_id', '$type', '$name', '$def_icon', '$def_short')");
     $_SESSION['popup_status'] = 'success'; $_SESSION['popup_message'] = 'Kategori berhasil ditambahkan!';
     header("Location: profile.php?tab=kategori&type=$type"); exit();
 }
+
 if (isset($_GET['del_cat'])) {
     $id_cat = $_GET['del_cat'];
     $q_cek = $conn->query("SELECT type FROM categories WHERE id='$id_cat' AND user_id='$user_id'");
@@ -115,6 +143,53 @@ $user_data = $u_res->fetch_assoc();
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
 
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        /* Style Tambahan untuk Pilihan Icon */
+        .icon-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); /* Fit otomatis */
+            gap: 10px; 
+            margin-top: 10px; 
+            max-height: 200px; /* Tinggi maksimal scroll */
+            overflow-y: auto;  /* Scroll vertikal saja */
+            overflow-x: hidden; /* Matikan scroll horizontal */
+            padding-right: 5px; /* Spasi untuk scrollbar */
+        }
+        
+        /* Style Search Bar Icon */
+        .icon-search-wrapper {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .icon-search-wrapper i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        .icon-search-input {
+            width: 100%;
+            padding: 8px 10px 8px 35px; /* Padding kiri untuk ikon */
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .icon-search-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .icon-option { 
+            display: flex; align-items: center; justify-content: center; 
+            padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-size: 1.4rem; color: #64748b;
+        }
+        .icon-option:hover { background: #f1f5f9; }
+        .icon-option.selected { background: #4f46e5; color: white; border-color: #4f46e5; }
+        .shortcut-badge { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+    </style>
 </head>
 <body>
 
@@ -167,6 +242,7 @@ $user_data = $u_res->fetch_assoc();
 
             <div id="AturKategori" class="tab-content" style="display: none;">
                 <h3 style="margin-bottom:20px;">Kelola Kategori Transaksi</h3>
+                
                 <form method="POST" id="form-kategori" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
                     <div style="flex:1;">
                         <label class="form-label">Tipe</label>
@@ -189,15 +265,32 @@ $user_data = $u_res->fetch_assoc();
                         while($c = $cats->fetch_assoc()): 
                         ?>
                         <tr class="kategori-row" data-type="<?php echo $c['type']; ?>" style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:15px; width: 50px;">
+                                <i class='bx <?php echo $c['icon'] ?? 'bx-category'; ?>' style="font-size: 1.5rem; color: #64748b;"></i>
+                            </td>
                             <td style="padding:15px;">
                                 <span class="badge-tipe <?php echo ($c['type']=='pemasukan')?'badge-in':'badge-out'; ?>">
                                     <?php echo ucfirst($c['type']); ?>
                                 </span>
+                                <?php if($c['is_shortcut']): ?>
+                                    <span class="shortcut-badge"><i class='bx bxs-star'></i> Shortcut</span>
+                                <?php endif; ?>
                             </td>
                             <td style="padding:15px; font-weight:500;"><?php echo htmlspecialchars($c['name']); ?></td>
                             <td style="padding:15px; text-align:right;">
+                                <button type="button" 
+                                        onclick="openEditCatModal(
+                                            '<?php echo $c['id']; ?>', 
+                                            '<?php echo htmlspecialchars($c['name'], ENT_QUOTES); ?>', 
+                                            '<?php echo $c['type']; ?>',
+                                            '<?php echo $c['icon'] ?? 'bx-category'; ?>',
+                                            '<?php echo $c['is_shortcut']; ?>'
+                                        )" 
+                                        style="background:none; border:none; cursor:pointer; margin-right:10px;" class="text-primary">
+                                    <i class='bx bx-pencil' style="font-size:1.2rem;"></i>
+                                </button>
                                 <a href="?del_cat=<?php echo $c['id']; ?>&tab=kategori&type=<?php echo $c['type']; ?>" class="text-danger" onclick="return confirm('Hapus kategori ini?')">
-                                    <i class='bx bx-trash'></i>
+                                    <i class='bx bx-trash' style="font-size:1.2rem;"></i>
                                 </a>
                             </td>
                         </tr>
@@ -236,6 +329,43 @@ $user_data = $u_res->fetch_assoc();
     </div>
 </div>
 
+<div class="popup-overlay" id="editCatModal" style="display:none; opacity:0; transition: opacity 0.3s;">
+    <div class="popup-box" style="width:450px;">
+        <h3 class="popup-title" style="margin-bottom: 20px;">Edit Kategori</h3>
+        
+        <form method="POST">
+            <input type="hidden" name="edit_id" id="edit_cat_id">
+            <input type="hidden" name="edit_type" id="edit_cat_type">
+            <input type="hidden" name="edit_icon" id="edit_cat_icon_input"> 
+            
+            <div class="form-group">
+                <label class="form-label">Nama Kategori</label>
+                <input type="text" name="edit_name" id="edit_cat_name" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Pilih Ikon</label>
+                <div class="icon-search-wrapper">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="iconSearchInput" class="icon-search-input" placeholder="Cari ikon..." onkeyup="filterIcons()">
+                </div>
+                <div class="icon-grid" id="iconGrid">
+                    </div>
+            </div>
+
+            <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 10px; background: #f8fafc; border-radius: 8px;">
+                <input type="checkbox" name="edit_shortcut" id="edit_cat_shortcut" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="edit_cat_shortcut" style="margin:0; font-weight:500; cursor: pointer;">Tampilkan Shortcut di Dashboard</label>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="button" onclick="closeEditCatModal()" class="popup-btn" style="background:#f1f5f9; color:#333;">Batal</button>
+                <button type="submit" name="edit_cat" class="popup-btn success">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="popup-overlay" id="unsavedChangesModal" style="display:none; opacity:0; transition: opacity 0.3s;">
     <div class="popup-box">
         <div class="popup-icon-box error"><i class='bx bx-error'></i></div>
@@ -251,6 +381,150 @@ $user_data = $u_res->fetch_assoc();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
+    const availableIcons = [
+        // === KEUANGAN, BISNIS & BELANJA ===
+        'bx-money', 'bx-wallet', 'bx-wallet-alt', 'bx-credit-card', 'bx-credit-card-alt', 
+        'bx-dollar', 'bx-dollar-circle', 'bx-bitcoin', 'bx-euro', 'bx-yen', 'bx-pound', 'bx-ruble', 'bx-rupee',
+        'bx-cart', 'bx-cart-alt', 'bx-shopping-bag', 'bx-basket', 'bx-store', 'bx-store-alt', 'bx-shop',
+        'bx-purchase-tag', 'bx-purchase-tag-alt', 'bx-barcode', 'bx-receipt', 'bx-calculator', 
+        'bx-bank', 'bx-building-house', 'bx-buildings', 'bx-home', 'bx-home-circle',
+        'bx-briefcase', 'bx-briefcase-alt', 'bx-archive', 'bx-box', 'bx-package', 'bx-gift',
+        'bx-line-chart', 'bx-bar-chart', 'bx-bar-chart-alt', 'bx-bar-chart-square', 'bx-pie-chart', 
+        'bx-pie-chart-alt', 'bx-trending-up', 'bx-trending-down', 'bx-coin', 'bx-coin-stack', 
+        'bx-diamond', 'bx-crown', 'bx-award', 'bx-badge', 'bx-star', 'bx-trophy', 'bx-medal',
+
+        // === MAKANAN & MINUMAN ===
+        'bx-food-menu', 'bx-restaurant', 'bx-coffee', 'bx-coffee-togo', 'bx-beer', 'bx-drink', 'bx-water', 
+        'bx-wine', 'bx-martini', 'bx-bowl-rice', 'bx-bowl-hot', 'bx-cookie', 'bx-cake', 
+        'bx-baguette', 'bx-dish', 'bx-fridge', 'bx-cheese', 'bx-pizza', 'bx-popsicle',
+
+        // === TRANSPORTASI & PERJALANAN ===
+        'bx-car', 'bx-bus', 'bx-bus-school', 'bx-taxi', 'bx-train', 'bx-train-subway', 'bx-cycling', 
+        'bx-walk', 'bx-run', 'bx-gas-pump', 'bx-charging-station', 'bx-map', 'bx-map-pin', 'bx-map-alt',
+        'bx-navigation', 'bx-compass', 'bx-rocket', 'bx-plane', 'bx-plane-alt', 'bx-plane-take-off', 
+        'bx-plane-land', 'bx-anchor', 'bx-ship', 'bx-traffic-cone', 'bx-hotel', 'bx-trip', 'bx-world', 
+        'bx-globe', 'bx-planet', 'bx-flag',
+
+        // === TEKNOLOGI & GADGET ===
+        'bx-mobile', 'bx-mobile-alt', 'bx-mobile-vibration', 'bx-phone', 'bx-phone-call', 'bx-phone-incoming',
+        'bx-laptop', 'bx-desktop', 'bx-mouse', 'bx-mouse-alt', 'bx-keyboard', 'bx-headphone', 'bx-speaker',
+        'bx-camera', 'bx-camera-movie', 'bx-video', 'bx-video-recording', 'bx-webcam', 'bx-microphone',
+        'bx-wifi', 'bx-wifi-off', 'bx-bluetooth', 'bx-cast', 'bx-hdd', 'bx-memory-card', 'bx-microchip', 'bx-chip',
+        'bx-usb', 'bx-plug', 'bx-server', 'bx-data', 'bx-cloud', 'bx-cloud-upload', 'bx-cloud-download',
+        'bx-tv', 'bx-broadcast', 'bx-radar', 'bx-station', 'bx-satellite', 'bx-game', 'bx-joystick', 'bx-joystick-alt',
+
+        // === RUMAH, UTILITAS & KELUARGA ===
+        'bx-home-heart', 'bx-bed', 'bx-bath', 'bx-chair', 'bx-cabinet', 'bx-door-open', 'bx-window',
+        'bx-bulb', 'bx-trash', 'bx-trash-alt', 'bx-wrench', 'bx-hammer', 'bx-paint', 'bx-brush', 'bx-spray-can',
+        'bx-palette', 'bx-cut', 'bx-ruler', 'bx-pencil', 'bx-pen', 'bx-edit', 'bx-edit-alt',
+        'bx-key', 'bx-lock', 'bx-lock-open', 'bx-lock-alt', 'bx-shield', 'bx-shield-alt-2', 'bx-cctv',
+        'bx-baby-carriage', 'bx-male', 'bx-female', 'bx-user', 'bx-user-circle', 'bx-group', 
+        'bx-face', 'bx-happy', 'bx-happy-alt', 'bx-sad', 'bx-sleepy', 'bx-shocked', 'bx-cool',
+
+        // === KESEHATAN & OLAHRAGA ===
+        'bx-heart', 'bx-heart-circle', 'bx-pulse', 'bx-plus-medical', 'bx-first-aid', 'bx-health', 
+        'bx-capsule', 'bx-injection', 'bx-dna', 'bx-virus', 'bx-bacteria', 'bx-bandage',
+        'bx-dumbbell', 'bx-football', 'bx-basketball', 'bx-tennis-ball', 'bx-bowling-ball', 'bx-baseball', 
+        'bx-swim', 'bx-body', 'bx-brain', 'bx-spa', 'bx-timer', 'bx-stopwatch',
+
+        // === PENDIDIKAN & KANTOR ===
+        'bx-book', 'bx-book-open', 'bx-book-heart', 'bx-book-bookmark', 'bx-bookmarks', 'bx-library',
+        'bx-notepad', 'bx-note', 'bx-paste', 'bx-copy', 'bx-file', 'bx-file-blank', 'bx-folder', 'bx-folder-open',
+        'bx-envelope', 'bx-envelope-open', 'bx-send', 'bx-mail-send', 'bx-message', 'bx-message-dots',
+        'bx-calendar', 'bx-calendar-check', 'bx-calendar-event', 'bx-time', 'bx-time-five', 'bx-alarm', 'bx-bell',
+        'bx-paperclip', 'bx-pin', 'bx-link', 'bx-link-external', 'bx-printer', 'bx-id-card', 'bx-search', 'bx-search-alt',
+
+        // === ALAM & CUACA ===
+        'bx-sun', 'bx-moon', 'bx-cloud-rain', 'bx-cloud-lightning', 'bx-cloud-snow', 'bx-wind', 
+        'bx-leaf', 'bx-tree', 'bx-flower', 'bx-landscape', 'bx-bug', 'bx-dog', 'bx-cat', 'bx-bone',
+        'bx-fire', 'bx-water',
+
+        // === MEDIA & SOSIAL ===
+        'bx-music', 'bx-play', 'bx-play-circle', 'bx-pause', 'bx-stop', 'bx-rewind', 'bx-fast-forward',
+        'bx-volume-full', 'bx-volume-mute', 'bx-like', 'bx-dislike', 'bx-comment', 'bx-share', 'bx-share-alt',
+        'bx-image', 'bx-images', 'bx-slideshow', 'bx-film', 'bx-movie-play',
+
+        // === SIMBOL & LAINNYA ===
+        'bx-check', 'bx-check-circle', 'bx-check-double', 'bx-x', 'bx-x-circle', 
+        'bx-plus', 'bx-plus-circle', 'bx-minus', 'bx-minus-circle', 'bx-question-mark', 'bx-info-circle',
+        'bx-error', 'bx-error-circle', 'bx-warning', 'bx-notification', 'bx-power-off', 'bx-log-out', 'bx-log-in',
+        'bx-grid-alt', 'bx-list-ul', 'bx-list-ol', 'bx-menu', 'bx-dots-horizontal', 'bx-dots-vertical',
+        'bx-chevron-up', 'bx-chevron-down', 'bx-chevron-left', 'bx-chevron-right',
+        'bx-sort', 'bx-filter', 'bx-filter-alt', 'bx-slider', 'bx-slider-alt',
+        'bx-toggle-left', 'bx-toggle-right', 'bx-radio-circle', 'bx-checkbox-checked'
+    ];
+
+
+    function renderIcons(selectedIcon, filterText = '') {
+        const grid = document.getElementById('iconGrid');
+        const input = document.getElementById('edit_cat_icon_input');
+        grid.innerHTML = ''; // Reset grid
+
+        // Filter array ikon berdasarkan teks pencarian
+        const filteredIcons = availableIcons.filter(icon => 
+            icon.toLowerCase().includes(filterText.toLowerCase())
+        );
+
+        if (filteredIcons.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; font-size:0.8rem; padding:10px;">Ikon tidak ditemukan</div>';
+            return;
+        }
+
+        filteredIcons.forEach(icon => {
+            const div = document.createElement('div');
+            // Cek apakah ikon ini adalah yang sedang dipilih
+            const isSelected = (icon === selectedIcon); 
+            div.className = `icon-option ${isSelected ? 'selected' : ''}`;
+            div.innerHTML = `<i class='bx ${icon}'></i>`;
+            
+            div.onclick = function() {
+                // Hapus class selected dari item lain di DOM saat ini
+                document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+                // Tambah class ke item ini
+                div.classList.add('selected');
+                // Update hidden input
+                input.value = icon;
+                
+                // Simpan ikon terpilih ke variabel global (agar persist saat search)
+                // (Opsional, tergantung UX yang diinginkan)
+            };
+            grid.appendChild(div);
+        });
+    }
+
+    function filterIcons() {
+        const searchText = document.getElementById('iconSearchInput').value;
+        const currentSelectedIcon = document.getElementById('edit_cat_icon_input').value;
+        renderIcons(currentSelectedIcon, searchText);
+    }
+    
+    // Update fungsi openEditCatModal agar mereset search bar
+    function openEditCatModal(id, name, type, icon, isShortcut) {
+        document.getElementById('edit_cat_id').value = id;
+        document.getElementById('edit_cat_name').value = name;
+        document.getElementById('edit_cat_type').value = type;
+        document.getElementById('edit_cat_icon_input').value = icon;
+        
+        // Reset Search Bar
+        document.getElementById('iconSearchInput').value = '';
+        
+        // Set Checkbox
+        document.getElementById('edit_cat_shortcut').checked = (isShortcut == 1);
+
+        // Render Semua Ikon (Tanpa Filter Awal)
+        renderIcons(icon);
+
+        const modal = document.getElementById('editCatModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+    }
+
+    function closeEditCatModal() {
+        const modal = document.getElementById('editCatModal');
+        modal.style.opacity = '0';
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
     // --- 1. DETEKSI UNSAVED CHANGES & INTERCEPT LINK ---
     let formChanged = false;
     let targetUrl = ''; 
