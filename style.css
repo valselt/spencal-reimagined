@@ -359,7 +359,10 @@ ul { list-style: none; }
 }
 
 /* --- FORMS --- */
-.form-group { margin-bottom: 15px; }
+.form-group { 
+    margin-bottom: 15px; 
+    position: relative; /* WAJIB ADA agar flatpickr nempel disini */
+}
 .form-label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-dark); }
 .form-control {
     width: 100%;

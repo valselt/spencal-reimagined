@@ -28,24 +28,6 @@ if (!isset($_SESSION['user_id'])) {
             transition: 0.2s;
         }
         .btn-login-valselt:hover { background: #4338ca; }
-        .flatpickr-current-month .flatpickr-monthDropdown-months {
-             font-weight: 700; /* Bulan lebih tebal */
-        }
-        .flatpickr-today-btn {
-            background: #4f46e5; 
-            color: white; 
-            padding: 12px; 
-            text-align: center; 
-            font-weight: 600; 
-            cursor: pointer;
-            border-top: 1px solid #e2e8f0;
-            transition: 0.2s;
-        }
-        .flatpickr-today-btn:hover {
-            background: #4338ca;
-        }
-        /* Agar sudut bawah membulat mengikuti tema */
-        .flatpickr-calendar { overflow: hidden; }
     </style>
 </head>
 <body>
@@ -178,6 +160,154 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
 
         @media (max-width: 968px) { 
             .charts-grid, .daily-details-grid { grid-template-columns: 1fr; } 
+        }
+
+        /* --- PERBAIKAN: CSS TOMBOL DIPINDAH KESINI --- */
+        .flatpickr-calendar { 
+            font-family: 'DM Sans', sans-serif !important;
+            border-radius: 16px !important;
+            overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; 
+            border: 1px solid #e2e8f0 !important;
+            width: auto !important; 
+            min-width: 300px; /* Opsional: Biar gak kekecilan */
+            z-index: 999 !important;
+        }
+
+        .form-group .flatpickr-calendar {
+            top: 100% !important;       /* Paksa posisi tepat di bawah input */
+            left: 0 !important;         /* Rata kiri dengan input */
+            right: auto !important;     /* Reset kanan */
+            transform: none !important; /* Matikan efek transform bawaan yg bikin lari */
+            margin-top: 5px;            /* Beri jarak sedikit biar rapi */
+        }
+
+        /* 2. Header Bulan (Bagian Atas) */
+        .flatpickr-months {
+            background: #6a62c5 !important; /* Warna Header Ungu */
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding-top: 15px;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+
+        
+
+        /* Warna Teks Bulan & Tahun jadi Putih (Biar kebaca di background ungu) */
+        .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .flatpickr-current-month input.cur-year {
+            color: #ffffff !important; 
+            font-weight: 700;
+        }
+        
+        /* Warna Panah Kiri/Kanan jadi Putih */
+        .flatpickr-months .flatpickr-prev-month, 
+        .flatpickr-months .flatpickr-next-month {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }
+        .flatpickr-months .flatpickr-prev-month:hover svg, 
+        .flatpickr-months .flatpickr-next-month:hover svg {
+            fill: #ffffff !important;
+            opacity: 0.7;
+        }
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+            background-color: #ffffff !important; /* Background dropdown putih */
+            color: #334155 !important;            /* Teks dropdown hitam/abu */
+            font-weight: 500 !important;
+        }
+
+        /* Nama Hari (Sen, Sel, Rab...) */
+        span.flatpickr-weekday {
+            color: #64748b !important; /* Warna abu font hari */
+            font-weight: 600 !important;
+        }
+
+        .flatpickr-day {
+            border-radius: 10px !important; /* Rounded 10px */
+            margin: 3px !important;         /* Margin renggang */
+            height: 38px !important;        /* Tinggi kotak */
+            line-height: 38px !important;   /* Teks vertikal center */
+            width: 38px !important;         /* Lebar kotak */
+            max-width: 38px !important;
+            border: none !important;        /* Hapus border bawaan */
+            transition: all 0.2s ease;
+        }
+
+        /* 1. HOVER BIASA (Abu Opacity 30%) */
+        .flatpickr-day:hover,
+        .flatpickr-day:focus {
+            background: rgba(203, 213, 225, 0.3) !important; /* Abu transparan */
+            border-color: transparent !important;
+            border-radius: 10px !important;
+        }
+
+        /* 2. TANGGAL TERPILIH (Biru Spencal) */
+        .flatpickr-day.selected, 
+        .flatpickr-day.startRange, 
+        .flatpickr-day.endRange, 
+        .flatpickr-day.selected.inRange, 
+        .flatpickr-day.startRange.inRange, 
+        .flatpickr-day.endRange.inRange, 
+        .flatpickr-day.selected:focus, 
+        .flatpickr-day.startRange:focus, 
+        .flatpickr-day.endRange:focus, 
+        .flatpickr-day.selected:hover, 
+        .flatpickr-day.startRange:hover, 
+        .flatpickr-day.endRange:hover, 
+        .flatpickr-day.selected.prevMonthDay, 
+        .flatpickr-day.startRange.prevMonthDay, 
+        .flatpickr-day.endRange.prevMonthDay, 
+        .flatpickr-day.selected.nextMonthDay, 
+        .flatpickr-day.startRange.nextMonthDay, 
+        .flatpickr-day.endRange.nextMonthDay {
+            background: #4f46e5 !important; /* Biru Utama */
+            color: #fff !important;
+            border-color: #4f46e5 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+
+        /* --- 3. TANGGAL HARI INI (MODIFIKASI ORANYE) --- */
+        
+        /* Kondisi Normal: Strip Bawah Tebal Oranye */
+        .flatpickr-day.today {
+            border: none !important;
+            border-bottom: 3px solid #e26a35 !important; /* Strip Oranye */
+            border-radius: 5px !important; /* Rounded kecil saat strip */
+        }
+
+        /* Kondisi Hover Hari Ini: Jadi Kotak Penuh Oranye */
+        .flatpickr-day.today:hover,
+        .flatpickr-day.today:focus {
+            background: #e26a35 !important; /* Full Oranye */
+            color: white !important;
+            border-bottom: none !important; /* Hilangkan strip */
+            border-radius: 10px !important; /* Rounded besar kembali */
+        }
+        
+        /* Fix Bug: Jika hari ini JUGA dipilih (selected), biarkan biru menang */
+        .flatpickr-day.today.selected {
+            background: #4f46e5 !important;
+            border-bottom: none !important;
+        }
+
+        /* --- 4. TOMBOL PILIH HARI INI (WARNA #7B73D9) --- */
+        .flatpickr-today-btn {
+            background: #7B73D9 !important; /* Ungu Muda Request */
+            color: white; 
+            padding: 15px; 
+            text-align: center; 
+            font-weight: 600; 
+            cursor: pointer;
+            border-top: 1px solid #e2e8f0;
+            transition: 0.2s;
+            border-bottom-left-radius: 16px; 
+            border-bottom-right-radius: 16px;
+        }
+        .flatpickr-today-btn:hover {
+            background: #6a62c5 !important; /* Sedikit lebih gelap saat hover */
         }
     </style>
 </head>
@@ -542,29 +672,32 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         }
     }, 1000 * 60); // cek setiap 1 menit
 
-    flatpickr("input[name='tanggal']", {
-        dateFormat: "Y-m-d",        // Format ke Database (tetap angka)
-        altInput: true,             // Tampilkan format berbeda ke user
-        altFormat: "l, j F Y",      // Format Modern: "Senin, 8 Desember 2025"
-        locale: "id",               // Bahasa Indonesia
-        defaultDate: "today",       // Default hari ini
-        animate: true,              // Animasi buka/tutup
-        disableMobile: "true",      // PENTING: Paksa tema modern muncul di HP (bukan kalender native HP)
+    // Ambil elemen input tanggal
+    const dateInput = document.querySelector("input[name='tanggal']");
+
+    flatpickr(dateInput, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "l, j F Y",
+        locale: "id",
+        defaultDate: "today",
+        animate: true,
+        disableMobile: "true",
         
-        // FUNGSI MEMBUAT TOMBOL "HARI INI"
+        // --- PERBAIKAN SCROLLING ---
+        // Tempelkan kalender ke elemen pembungkus input (.form-group)
+        // Agar saat discroll, kalender ikut bergerak bersama inputnya
+        appendTo: dateInput.parentElement,
+        // ---------------------------
+
         onReady: function(selectedDates, dateStr, instance) {
-            // 1. Bikin elemen tombol
             const todayBtn = document.createElement("div");
             todayBtn.innerHTML = "Pilih Hari Ini";
             todayBtn.className = "flatpickr-today-btn";
-            
-            // 2. Aksi saat tombol diklik
             todayBtn.onclick = function() {
-                instance.setDate(new Date()); // Set ke sekarang
-                instance.close();             // Tutup kalender
+                instance.setDate(new Date());
+                instance.close();
             };
-
-            // 3. Masukkan tombol ke dalam kalender
             instance.calendarContainer.appendChild(todayBtn);
         }
     });
