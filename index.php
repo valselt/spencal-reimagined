@@ -16,6 +16,8 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
     
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
     <style>
         body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f1f5f9; font-family: 'DM Sans', sans-serif; }
         .welcome-card { background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); max-width: 400px; width: 90%; }
@@ -26,6 +28,24 @@ if (!isset($_SESSION['user_id'])) {
             transition: 0.2s;
         }
         .btn-login-valselt:hover { background: #4338ca; }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+             font-weight: 700; /* Bulan lebih tebal */
+        }
+        .flatpickr-today-btn {
+            background: #4f46e5; 
+            color: white; 
+            padding: 12px; 
+            text-align: center; 
+            font-weight: 600; 
+            cursor: pointer;
+            border-top: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+        .flatpickr-today-btn:hover {
+            background: #4338ca;
+        }
+        /* Agar sudut bawah membulat mengikuti tema */
+        .flatpickr-calendar { overflow: hidden; }
     </style>
 </head>
 <body>
@@ -129,8 +149,11 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
     
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
-    
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .input-section { margin-bottom: 20px; }
@@ -246,7 +269,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 <form method="POST">
                     <div class="form-group">
                         <label class="form-label">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control" required value="<?php echo date('Y-m-d'); ?>">
+                        <input type="text" name="tanggal" class="form-control" required placeholder="Pilih Tanggal...">
                     </div>
 
                     <div class="form-group">
@@ -368,6 +391,8 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         </div>
     </main>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
 <script>
     function startLiveClock() {
@@ -491,6 +516,58 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         data.forEach(item => { let option = document.createElement('option'); option.value = item.id; option.text = item.name; subSelect.add(option); });
     }
     updateSubJenis();
+
+    let lastDate = new Date().toLocaleDateString('id-ID');
+
+    setInterval(() => {
+        let now = new Date().toLocaleDateString('id-ID');
+        
+        // Jika tanggal berubah → ambil ulang data dari server
+        if (now !== lastDate) {
+            fetch('api_refresh_daily.php')
+                .then(res => res.json())
+                .then(data => {
+                    document.querySelector('.stat-saldo .value').innerHTML =
+                        `Rp ${new Intl.NumberFormat('id-ID').format(data.sisa)} 
+                        <span>dari Rp ${new Intl.NumberFormat('id-ID').format(data.jatah)}</span>`;
+
+                    document.querySelector('.stat-out .value').innerHTML =
+                        `Rp ${new Intl.NumberFormat('id-ID').format(data.daily_out)}`;
+
+                    document.querySelector('.stat-in .value').innerHTML =
+                        `Rp ${new Intl.NumberFormat('id-ID').format(data.daily_in)}`;
+
+                    lastDate = now;
+                });
+        }
+    }, 1000 * 60); // cek setiap 1 menit
+
+    flatpickr("input[name='tanggal']", {
+        dateFormat: "Y-m-d",        // Format ke Database (tetap angka)
+        altInput: true,             // Tampilkan format berbeda ke user
+        altFormat: "l, j F Y",      // Format Modern: "Senin, 8 Desember 2025"
+        locale: "id",               // Bahasa Indonesia
+        defaultDate: "today",       // Default hari ini
+        animate: true,              // Animasi buka/tutup
+        disableMobile: "true",      // PENTING: Paksa tema modern muncul di HP (bukan kalender native HP)
+        
+        // FUNGSI MEMBUAT TOMBOL "HARI INI"
+        onReady: function(selectedDates, dateStr, instance) {
+            // 1. Bikin elemen tombol
+            const todayBtn = document.createElement("div");
+            todayBtn.innerHTML = "Pilih Hari Ini";
+            todayBtn.className = "flatpickr-today-btn";
+            
+            // 2. Aksi saat tombol diklik
+            todayBtn.onclick = function() {
+                instance.setDate(new Date()); // Set ke sekarang
+                instance.close();             // Tutup kalender
+            };
+
+            // 3. Masukkan tombol ke dalam kalender
+            instance.calendarContainer.appendChild(todayBtn);
+        }
+    });
 </script>
 
 <?php include 'popupcustom.php'; ?>
