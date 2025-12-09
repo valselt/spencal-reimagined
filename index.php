@@ -37,7 +37,7 @@ if (!isset($_SESSION['user_id'])) {
         <h2 style="margin-bottom: 10px; color: #1e293b;">Kelola Keuanganmu</h2>
         <p style="color: #64748b; margin-bottom: 30px;">Catat pengeluaran dan pemasukan dengan mudah.</p>
         
-        <a href="login/login.php" class="btn-login-valselt">
+        <a href="login.php" class="btn-login-valselt">
             <i class='bx bx-log-in-circle'></i> Login dengan Valselt ID
         </a>
     </div>

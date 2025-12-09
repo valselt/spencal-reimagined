@@ -3,7 +3,7 @@ session_start();
 require 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login/login.php"); exit();
+    header("Location: login.php"); exit();
 }
 
 $user_id = $_SESSION['user_id'];
@@ -76,7 +76,7 @@ if (isset($_POST['delete_account'])) {
     session_start();
     $_SESSION['popup_status'] = 'success';
     $_SESSION['popup_message'] = 'Akun Anda berhasil dihapus permanen.';
-    header("Location: login/login.php"); exit();
+    header("Location: login.php"); exit();
 }
 
 // --- LOGIC 3: CRUD KATEGORI ---
@@ -318,10 +318,22 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
                 <div style="max-height: 400px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
                     <table style="width:100%; border-collapse:collapse;">
                         <?php 
+                        // Query ambil semua kategori
                         $cats = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' ORDER BY type DESC, name ASC");
+                        
+                        // Hitung jumlah baris yang tampil untuk logic empty state
+                        $visible_count = 0; 
+
                         while($c = $cats->fetch_assoc()): 
+                            // LOGIKA UTAMA: Cek apakah tipe kategori ini sama dengan dropdown yang aktif?
+                            $is_match = ($c['type'] == $active_type);
+                            
+                            // Jika cocok, tampilkan. Jika beda, sembunyikan pakai CSS (display:none)
+                            $row_style = $is_match ? '' : 'display:none;';
+                            
+                            if ($is_match) $visible_count++;
                         ?>
-                        <tr class="kategori-row" data-type="<?php echo $c['type']; ?>" style="border-bottom:1px solid #f1f5f9;">
+                        <tr class="kategori-row" data-type="<?php echo $c['type']; ?>" style="border-bottom:1px solid #f1f5f9; <?php echo $row_style; ?>">
                             <td style="padding:15px; width: 50px;">
                                 <?php 
                                     $iconName = $c['icon'] ?? 'bx-category';
@@ -362,7 +374,10 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
                         </tr>
                         <?php endwhile; ?>
                     </table>
-                    <div id="empty-msg" style="padding:20px; text-align:center; display:none; color:#64748b;">Belum ada kategori.</div>
+                    
+                    <div id="empty-msg" style="padding:20px; text-align:center; color:#64748b; display: <?php echo ($visible_count == 0) ? 'block' : 'none'; ?>;">
+                        Belum ada kategori.
+                    </div>
                 </div>
             </div>
         </div>
