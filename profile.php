@@ -107,7 +107,7 @@ if (isset($_POST['edit_cat'])) {
 if (isset($_POST['add_cat'])) {
     $type = $_POST['cat_type']; 
     $name = htmlspecialchars($_POST['cat_name']);
-    $def_icon = 'bx-category'; 
+    $def_icon = 'category'; 
     $def_short = 0;
 
     $conn->query("INSERT INTO categories (user_id, type, name, icon, is_shortcut) VALUES ('$user_id', '$type', '$name', '$def_icon', '$def_short')");
@@ -115,19 +115,49 @@ if (isset($_POST['add_cat'])) {
     header("Location: profile.php?tab=kategori&type=$type"); exit();
 }
 
+// C. LOGIC HAPUS KATEGORI (DENGAN PROTEKSI)
 if (isset($_GET['del_cat'])) {
-    $id_cat = $_GET['del_cat'];
-    $q_cek = $conn->query("SELECT type FROM categories WHERE id='$id_cat' AND user_id='$user_id'");
-    if($row = $q_cek->fetch_assoc()){
+    $id_cat = $conn->real_escape_string($_GET['del_cat']); // Sanitasi input
+
+    // 1. Ambil info kategori dulu (untuk redirect type)
+    $q_cek = $conn->query("SELECT type, name FROM categories WHERE id='$id_cat' AND user_id='$user_id'");
+    
+    if ($row = $q_cek->fetch_assoc()) {
         $type_saat_hapus = $row['type'];
-        $conn->query("DELETE FROM categories WHERE id='$id_cat' AND user_id='$user_id'");
-        $_SESSION['popup_status'] = 'success'; $_SESSION['popup_message'] = 'Kategori berhasil dihapus!';
-        header("Location: profile.php?tab=kategori&type=$type_saat_hapus"); exit();
+        $nama_kategori = htmlspecialchars($row['name']);
+
+        // 2. CEK PENGGUNAAN DI TABEL TRANSAKSI
+        // Hitung berapa kali kategori ini muncul di transaksi user ini
+        $cek_transaksi = $conn->query("SELECT COUNT(*) AS total FROM transactions WHERE category_id='$id_cat' AND user_id='$user_id'");
+        $data_transaksi = $cek_transaksi->fetch_assoc();
+        $jumlah_terpakai = $data_transaksi['total'];
+
+        if ($jumlah_terpakai > 0) {
+            // SKENARIO GAGAL: Kategori sedang dipakai
+            $_SESSION['popup_status'] = 'error';
+            $_SESSION['popup_message'] = "<b>Gagal Hapus!</b><br>Kategori '{$nama_kategori}' sedang digunakan di <b>{$jumlah_terpakai} transaksi</b>.<br><br>Mohon edit transaksi tersebut ke kategori lain terlebih dahulu melalui menu Riwayat Transaksi.";
+        } else {
+            // SKENARIO SUKSES: Tidak ada transaksi yang pakai, aman dihapus
+            $del = $conn->query("DELETE FROM categories WHERE id='$id_cat' AND user_id='$user_id'");
+            if ($del) {
+                $_SESSION['popup_status'] = 'success';
+                $_SESSION['popup_message'] = 'Kategori berhasil dihapus!';
+            } else {
+                $_SESSION['popup_status'] = 'error';
+                $_SESSION['popup_message'] = 'Terjadi kesalahan sistem saat menghapus.';
+            }
+        }
+
+        // Redirect kembali ke tab kategori
+        header("Location: profile.php?tab=kategori&type=$type_saat_hapus");
+        exit();
     }
 }
 
 $u_res = $conn_valselt->query("SELECT * FROM users WHERE id='$user_id'");
 $user_data = $u_res->fetch_assoc();
+
+$tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
 ?>
 
 <!DOCTYPE html>
@@ -251,17 +281,23 @@ $user_data = $u_res->fetch_assoc();
 
         <div class="card">
             <div class="tab-nav">
-                <button class="tab-btn active" onclick="openTab(event, 'EditProfil')"><i class='bx bx-user'></i> Edit Profil</button>
-                <button class="tab-btn" onclick="openTab(event, 'AturKategori')"><i class='bx bx-layer'></i> Atur Kategori</button>
+                <button class="tab-btn <?php echo ($tab_active !== 'kategori') ? 'active' : ''; ?>" onclick="openTab(event, 'EditProfil')">
+                    <i class='bx bx-user'></i> Edit Profil
+                </button>
+                
+                <button class="tab-btn <?php echo ($tab_active === 'kategori') ? 'active' : ''; ?>" onclick="openTab(event, 'AturKategori')">
+                    <i class='bx bx-layer'></i> Atur Kategori
+                </button>
             </div>
 
-            <div id="EditProfil" class="tab-content" style="display: block;">
+            <div id="EditProfil" class="tab-content" style="display: <?php echo ($tab_active !== 'kategori') ? 'block' : 'none'; ?>;">
                 <a href="https://valseltid.ivanaldorino.web.id/index.php" id="btn-valselt" class="btn btn-primary" target="_blank">
                     Edit Profil & Ganti Foto di Valselt ID <i class='bx bx-link-external'></i>
                 </a>
-            </div>
+                
+                </div>
 
-            <div id="AturKategori" class="tab-content" style="display: none;">
+            <div id="AturKategori" class="tab-content" style="display: <?php echo ($tab_active === 'kategori') ? 'block' : 'none'; ?>;">
                 <h3 style="margin-bottom:20px;">Kelola Kategori Transaksi</h3>
                 
                 <form method="POST" id="form-kategori" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
@@ -289,7 +325,6 @@ $user_data = $u_res->fetch_assoc();
                             <td style="padding:15px; width: 50px;">
                                 <?php 
                                     $iconName = $c['icon'] ?? 'bx-category';
-                                    // Cek apakah ikon dimulai dengan 'bx-' (Boxicons) atau tidak (Google Icons)
                                     if (strpos($iconName, 'bx-') === 0) {
                                         echo "<i class='bx $iconName' style='font-size: 1.5rem; color: #64748b;'></i>";
                                     } else {
@@ -318,9 +353,11 @@ $user_data = $u_res->fetch_assoc();
                                         style="background:none; border:none; cursor:pointer; margin-right:10px;" class="text-primary">
                                     <i class='bx bx-pencil' style="font-size:1.2rem;"></i>
                                 </button>
-                                <a href="?del_cat=<?php echo $c['id']; ?>&tab=kategori&type=<?php echo $c['type']; ?>" class="text-danger" onclick="return confirm('Hapus kategori ini?')">
+                                <button type="button" class="text-danger" 
+                                        style="background:none; border:none; cursor:pointer;" 
+                                        onclick="openDeleteCatModal('?del_cat=<?php echo $c['id']; ?>&tab=kategori&type=<?php echo $c['type']; ?>')">
                                     <i class='bx bx-trash' style="font-size:1.2rem;"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -360,7 +397,9 @@ $user_data = $u_res->fetch_assoc();
 
 <div class="popup-overlay" id="editCatModal" style="display:none; opacity:0; transition: opacity 0.3s;">
     <div class="popup-box" style="width:450px;">
-        <h3 class="popup-title" style="margin-bottom: 20px;">Edit Kategori</h3>
+        <h3 class="popup-title" style="margin-bottom: 20px; text-align: left; display: flex; align-items: center; gap: 10px;">
+            <i class='bx bx-pencil'></i> Edit Kategori
+        </h3>
         
         <form method="POST">
             <input type="hidden" name="edit_id" id="edit_cat_id">
@@ -368,12 +407,12 @@ $user_data = $u_res->fetch_assoc();
             <input type="hidden" name="edit_icon" id="edit_cat_icon_input"> 
             
             <div class="form-group">
-                <label class="form-label">Nama Kategori</label>
+                <label class="form-label" style="text-align: left;">Nama Kategori</label>
                 <input type="text" name="edit_name" id="edit_cat_name" class="form-control" required>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Pilih Ikon</label>
+                <label class="form-label" style="text-align: left;">Pilih Ikon</label>
                 <div class="icon-search-wrapper">
                     <i class='bx bx-search'></i>
                     <input type="text" id="iconSearchInput" class="icon-search-input" placeholder="Cari ikon..." onkeyup="filterIcons()">
@@ -405,6 +444,20 @@ $user_data = $u_res->fetch_assoc();
         <div style="display:flex; gap:10px;">
             <button onclick="stayOnPage()" class="popup-btn" style="background:#f1f5f9; color:#333;">Batal</button>
             <button onclick="leavePage()" class="popup-btn error">Ya, Keluar</button>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" id="deleteCatModal" style="display:none; opacity:0; transition: opacity 0.3s;">
+    <div class="popup-box">
+        <div class="popup-icon-box error"><i class='bx bx-trash'></i></div>
+        <h3 class="popup-title">Hapus Kategori?</h3>
+        <p class="popup-message">Kategori ini akan dihapus permanen.</p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeDeleteCatModal()" class="popup-btn" style="background:#f1f5f9; color:#333;">Batal</button>
+            <a id="btn-confirm-delete-cat" href="#" class="popup-btn error" style="text-decoration:none; display:inline-block; text-align:center; line-height: normal; padding-top: 10px;">
+                Ya, Hapus
+            </a>
         </div>
     </div>
 </div>
@@ -864,6 +917,7 @@ $user_data = $u_res->fetch_assoc();
             { name: 'location_searching', tags: 'mencari lokasi location searching gps' },
             { name: 'location_disabled', tags: 'lokasi dinonaktifkan location disabled gps off' },
             { name: 'near_me', tags: 'di dekat saya near me lokasi sekitar' },
+            { name: 'local_parking', tags: 'parking parkir mobil motor jalan' },
             { name: 'place', tags: 'tempat place lokasi pin' },
             { name: 'local_hospital', tags: 'rumah sakit hospital medis emergency' },
             { name: 'local_police', tags: 'polisi kantor polisi local police keamanan' },
@@ -888,6 +942,7 @@ $user_data = $u_res->fetch_assoc();
             { name: 'emergency', tags: 'darurat emergency bantuan' },
             { name: 'terrain', tags: 'medan terrain peta kontur landscape' },
             { name: 'satellite', tags: 'satelit satellite citra map' }
+            
         ],
         miscellaneous: [
             { name: 'pets', tags: 'hewan peliharaan pets animals' },
@@ -1197,15 +1252,6 @@ $user_data = $u_res->fetch_assoc();
         document.getElementById('empty-msg').style.display = (visibleCount === 0) ? 'block' : 'none';
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.get('tab') === 'kategori'){
-            const tabBtn = document.querySelector("button[onclick*='AturKategori']");
-            if(tabBtn) { tabBtn.click(); }
-            setTimeout(filterKategori, 100); 
-        }
-    });
-
     function showDeleteConfirm() {
         const modal = document.getElementById('deleteConfirmModal');
         modal.style.display = 'flex';
@@ -1214,6 +1260,21 @@ $user_data = $u_res->fetch_assoc();
 
     function closeDeleteConfirm() {
         const modal = document.getElementById('deleteConfirmModal');
+        modal.style.opacity = '0';
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function openDeleteCatModal(deleteUrl) {
+        // Set link tombol "Ya, Hapus" sesuai URL delete kategori yang diklik
+        document.getElementById('btn-confirm-delete-cat').href = deleteUrl;
+        
+        const modal = document.getElementById('deleteCatModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+    }
+
+    function closeDeleteCatModal() {
+        const modal = document.getElementById('deleteCatModal');
         modal.style.opacity = '0';
         setTimeout(() => modal.style.display = 'none', 300);
     }
