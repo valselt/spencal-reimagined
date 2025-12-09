@@ -170,8 +170,14 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 
         /* SHORTCUT BUTTONS */
         .shortcut-container {
-            display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; margin-bottom: 20px;
-            -ms-overflow-style: none; scrollbar-width: none;
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 6px; 
+            overflow: visible;
+            padding: 10px 5px; 
+            margin-bottom: 20px;
+            -ms-overflow-style: none; 
+            scrollbar-width: none;
             /* Tambahan agar drag smooth di mobile */
             touch-action: pan-y; 
             -webkit-overflow-scrolling: touch;
@@ -180,7 +186,7 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         
         .shortcut-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-width: 80px; 
+            width: 65px; 
             cursor: grab; /* Cursor tangan terbuka */
             border: none; background: none; transition: transform 0.2s;
             user-select: none; /* Mencegah teks terpilih saat drag */
@@ -212,7 +218,40 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         /* Efek hover dinonaktifkan saat dragging agar tidak glitch */
         .shortcut-btn:not(.sortable-drag):hover .shortcut-icon { transform: translateY(-3px); }
         
-        .shortcut-name { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.2;}
+        .shortcut-name { font-size: 0.6rem; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.2;}
+
+        @media (max-width: 520px) {
+
+            /* Container Mobile */
+            .shortcut-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-start;   /* ← BARIS BERIKUTNYA MULAI DARI KIRI */
+                row-gap: 12px;
+                column-gap: 10px;
+                padding: 10px 0;
+            }
+
+            /* Item: 5 per baris */
+            .shortcut-btn {
+                width: calc(20% - 10px); /* 5 item per baris */
+                min-width: 0;
+                text-align: center;
+            }
+
+            /* Hide name on mobile */
+            .shortcut-name {
+                display: none !important;
+            }
+
+            .shortcut-icon {
+                margin-bottom: 0;
+            }
+        }
+
+
+
+
 
         /* --- PERBAIKAN: CSS TOMBOL DIPINDAH KESINI --- */
         .flatpickr-calendar { 
