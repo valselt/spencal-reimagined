@@ -123,7 +123,7 @@ $cats_pemasukan = $conn->query("SELECT * FROM categories WHERE user_id='$user_id
 $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND type='pengeluaran'");
 
 // --- BARU: QUERY SHORTCUT ---
-$shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND is_shortcut=1 ORDER BY type DESC, name ASC");
+$shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND is_shortcut=1 ORDER BY shortcut_order ASC, id ASC");
 ?>
 
 <!DOCTYPE html>
@@ -142,6 +142,7 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         .input-section { margin-bottom: 20px; }
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -167,29 +168,50 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
             .charts-grid, .daily-details-grid { grid-template-columns: 1fr; } 
         }
 
-        /* STYLE BARU: SHORTCUT BUTTONS */
+        /* SHORTCUT BUTTONS */
         .shortcut-container {
-            display: flex; gap: 15px; overflow-x: auto; padding: 5px; margin-bottom: 20px;
-            /* Scrollbar hidden styling */
+            display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; margin-bottom: 20px;
             -ms-overflow-style: none; scrollbar-width: none;
+            /* Tambahan agar drag smooth di mobile */
+            touch-action: pan-y; 
+            -webkit-overflow-scrolling: touch;
         }
         .shortcut-container::-webkit-scrollbar { display: none; }
         
         .shortcut-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-width: 80px; cursor: pointer; border: none; background: none; transition: 0.2s;
+            min-width: 80px; 
+            cursor: grab; /* Cursor tangan terbuka */
+            border: none; background: none; transition: transform 0.2s;
+            user-select: none; /* Mencegah teks terpilih saat drag */
+            /* PENTING: Mencegah browser mobile mengira ini scroll saat ditahan */
+            touch-action: none; 
         }
+        .shortcut-btn:active { cursor: grabbing; } 
+
+        /* Visual saat Dragging */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #f1f5f9;
+            border-radius: 16px;
+        }
+        .sortable-drag {
+            cursor: grabbing;
+            opacity: 1;
+        }
+
         .shortcut-icon {
             width: 50px; height: 50px; border-radius: 16px; 
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
             transition: transform 0.2s;
         }
-        /* Warna berdasarkan tipe */
         .shortcut-btn.pengeluaran .shortcut-icon { background: #fee2e2; color: #ef4444; }
         .shortcut-btn.pemasukan .shortcut-icon { background: #dcfce7; color: #22c55e; }
         
-        .shortcut-btn:hover .shortcut-icon { transform: translateY(-3px); }
+        /* Efek hover dinonaktifkan saat dragging agar tidak glitch */
+        .shortcut-btn:not(.sortable-drag):hover .shortcut-icon { transform: translateY(-3px); }
+        
         .shortcut-name { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.2;}
 
         /* --- PERBAIKAN: CSS TOMBOL DIPINDAH KESINI --- */
@@ -425,9 +447,11 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 
         <?php if($shortcuts->num_rows > 0): ?>
         <h2 class="section-title"><i class='bx bx-bolt-circle'></i> Akses Cepat</h2>
-        <div class="shortcut-container">
+        
+        <div class="shortcut-container" id="shortcutList">
             <?php while($sc = $shortcuts->fetch_assoc()): ?>
                 <button type="button" class="shortcut-btn <?php echo $sc['type']; ?>" 
+                        data-id="<?php echo $sc['id']; ?>"
                         onclick="fillTransaction('<?php echo $sc['type']; ?>', '<?php echo $sc['id']; ?>')">
                     <div class="shortcut-icon">
                         <?php 
@@ -443,6 +467,9 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
                 </button>
             <?php endwhile; ?>
         </div>
+        <small style="color: #cbd5e1; display:block; margin-top:-10px; margin-bottom: 20px; font-size: 0.75rem;">
+            * Tekan tahan dan geser ikon untuk mengatur urutan.
+        </small>
         <?php endif; ?>
 
         <div class="input-section">
@@ -577,6 +604,42 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
 <script>
+    // --- 1. INISIALISASI DRAG AND DROP ---
+    const shortcutContainer = document.getElementById('shortcutList');
+    if (shortcutContainer) {
+        new Sortable(shortcutContainer, {
+            animation: 150, // Animasi saat digeser
+            ghostClass: 'sortable-ghost', // Class saat elemen melayang
+            delay: 100, // Delay sedikit agar tidak konflik dengan klik
+            delayOnTouchOnly: true, // Delay hanya di layar sentuh
+            onEnd: function (evt) {
+                // Saat drag selesai, simpan urutan baru
+                saveShortcutOrder();
+            }
+        });
+    }
+
+    function saveShortcutOrder() {
+        let order = [];
+        // Ambil semua ID kategori berdasarkan urutan DOM saat ini
+        document.querySelectorAll('.shortcut-btn').forEach((el) => {
+            order.push(el.getAttribute('data-id'));
+        });
+
+        // Kirim ke API via Fetch
+        fetch('api_save_order.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: order })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Order saved:', data);
+        })
+        .catch(error => {
+            console.error('Error saving order:', error);
+        });
+    }
     function startLiveClock() {
         const timeDisplay = document.getElementById('time-text');
         const dateDisplay = document.getElementById('date-text');
