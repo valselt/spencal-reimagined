@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
 # 3. Enable Mod Rewrite
 RUN a2enmod rewrite
 
+# Mengubah AllowOverride None menjadi All agar file .htaccess terbaca
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+
 # 4. Setup Working Directory
 WORKDIR /var/www/html
 

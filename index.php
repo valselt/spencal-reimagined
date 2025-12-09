@@ -606,14 +606,17 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 <script>
     // --- 1. INISIALISASI DRAG AND DROP ---
     const shortcutContainer = document.getElementById('shortcutList');
+    
     if (shortcutContainer) {
         new Sortable(shortcutContainer, {
-            animation: 150, // Animasi saat digeser
-            ghostClass: 'sortable-ghost', // Class saat elemen melayang
-            delay: 100, // Delay sedikit agar tidak konflik dengan klik
-            delayOnTouchOnly: true, // Delay hanya di layar sentuh
+            animation: 150,
+            ghostClass: 'sortable-ghost', // Class elemen bayangan saat drag
+            dragClass: 'sortable-drag',   // Class elemen yang sedang dipegang
+            delay: 150, // PENTING: Tahan 0.15 detik supaya tidak bentrok dengan klik biasa di HP
+            delayOnTouchOnly: true,
+            
+            // Event saat selesai geser
             onEnd: function (evt) {
-                // Saat drag selesai, simpan urutan baru
                 saveShortcutOrder();
             }
         });
@@ -621,25 +624,37 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 
     function saveShortcutOrder() {
         let order = [];
-        // Ambil semua ID kategori berdasarkan urutan DOM saat ini
-        document.querySelectorAll('.shortcut-btn').forEach((el) => {
-            order.push(el.getAttribute('data-id'));
+        
+        // Ambil urutan ID terbaru dari elemen HTML
+        Array.from(shortcutContainer.children).forEach(function(child) {
+            if (child.hasAttribute('data-id')) {
+                order.push(child.getAttribute('data-id'));
+            }
         });
 
-        // Kirim ke API via Fetch
-        fetch('api_save_order.php', {
+        console.log("Mengirim urutan ke server:", order);
+
+        // Kirim ke API
+        fetch('api_save_order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ order: order })
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Order saved:', data);
+            console.log('Respon Server:', data);
+            if(data.status === 'success') {
+                // Opsional: Beri tanda visual sukses (misal console atau toast)
+                console.log("✅ Urutan tersimpan permanen!");
+            } else {
+                alert("Gagal menyimpan urutan: " + data.message);
+            }
         })
         .catch(error => {
-            console.error('Error saving order:', error);
+            console.error('Error fetch:', error);
         });
     }
+
     function startLiveClock() {
         const timeDisplay = document.getElementById('time-text');
         const dateDisplay = document.getElementById('date-text');
