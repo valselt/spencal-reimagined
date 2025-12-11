@@ -6,7 +6,7 @@ date_default_timezone_set('Asia/Jakarta');
 // ==========================================
 
 // 1. Database
-$db_host = '100.115.160.110';
+$db_host = 'mariadb';
 $db_port = 3306;
 $db_user = 'root';
 $db_pass = 'aldorino04';
