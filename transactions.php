@@ -36,11 +36,38 @@ if(isset($_GET['msg']) && $_GET['msg'] == 'updated'){
 }
 
 // --- LOGIC AMBIL DATA TRANSAKSI ---
+
+// 1. Definisikan Opsi Sortir
+$sort_option = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
+$order_sql = "";
+
+switch ($sort_option) {
+    case 'oldest':
+        // Terlama: Tanggal ASC, ID ASC
+        $order_sql = "t.date ASC, t.id ASC"; 
+        break;
+    case 'amount_high':
+        // Nominal Terbesar: Amount DESC
+        $order_sql = "t.amount DESC"; 
+        break;
+    case 'amount_low':
+        // Nominal Terkecil: Amount ASC
+        $order_sql = "t.amount ASC"; 
+        break;
+    case 'newest':
+    default:
+        // Terbaru (Default): Tanggal DESC, ID DESC
+        $order_sql = "t.date DESC, t.id DESC"; 
+        break;
+}
+
+// 2. Masukkan ke Query
 $query = "SELECT t.*, c.name as category_name, c.type 
           FROM transactions t 
           JOIN categories c ON t.category_id = c.id 
           WHERE t.user_id = '$user_id' 
-          ORDER BY t.date DESC, t.id DESC";
+          ORDER BY $order_sql";
+          
 $result = $conn->query($query);
 ?>
 
@@ -100,8 +127,26 @@ $result = $conn->query($query);
 
     <main class="main-content">
         <header class="content-header">
-            <h1>Riwayat Transaksi</h1>
-            <p>Daftar lengkap pemasukan dan pengeluaran Anda.</p>
+            <div class="header-between">
+                <div>
+                    <h1>Riwayat Transaksi</h1>
+                    <p>Daftar lengkap pemasukan dan pengeluaran Anda.</p>
+                </div>
+                
+                <div class="sort-wrapper">
+                    <form method="GET">
+                        <div class="select-wrapper">
+                            <i class='bx bx-sort-alt-2'></i>
+                            <select name="sort" class="sort-select" onchange="this.form.submit()">
+                                <option value="newest" <?php echo ($sort_option == 'newest') ? 'selected' : ''; ?>>Terbaru</option>
+                                <option value="oldest" <?php echo ($sort_option == 'oldest') ? 'selected' : ''; ?>>Terlama</option>
+                                <option value="amount_high" <?php echo ($sort_option == 'amount_high') ? 'selected' : ''; ?>>Nominal Terbesar</option>
+                                <option value="amount_low" <?php echo ($sort_option == 'amount_low') ? 'selected' : ''; ?>>Nominal Terkecil</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </header>
 
         <?php if(isset($_GET['msg']) && $_GET['msg'] == 'deleted'): ?>
