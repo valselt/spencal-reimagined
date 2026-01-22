@@ -36,16 +36,20 @@ if (isset($_POST['update_profile'])) {
             $s3_key = "photoprofile/{$timestamp}_{$user_id}.webp";
 
             try {
-                $result = $s3->putObject([
-                    'Bucket' => $minio_bucket,
-                    'Key'    => $s3_key,
-                    'Body'   => $webp_data,
-                    'ContentType' => 'image/webp',
-                    'ACL'    => 'public-read'
-                ]);
-                $foto_url = $result['ObjectURL'];
-                $conn->query("UPDATE users SET profile_pic='$foto_url' WHERE id='$user_id'");
-            } catch (AwsException $e) {
+                // Asumsi $s3 dan $minio_bucket didefinisikan di config.php atau env
+                // Jika tidak ada variable ini, pastikan config AWS/Minio sudah benar
+                if(isset($s3) && isset($minio_bucket)){
+                    $result = $s3->putObject([
+                        'Bucket' => $minio_bucket,
+                        'Key'    => $s3_key,
+                        'Body'   => $webp_data,
+                        'ContentType' => 'image/webp',
+                        'ACL'    => 'public-read'
+                    ]);
+                    $foto_url = $result['ObjectURL'];
+                    $conn->query("UPDATE users SET profile_pic='$foto_url' WHERE id='$user_id'");
+                }
+            } catch (Exception $e) { // Ubah AwsException ke Exception umum biar aman jika lib tidak load
                 $_SESSION['popup_status'] = 'error';
                 $_SESSION['popup_message'] = "Upload Gagal: " . $e->getMessage();
             }
@@ -71,6 +75,7 @@ if (isset($_POST['update_profile'])) {
 if (isset($_POST['delete_account'])) {
     $conn->query("DELETE FROM transactions WHERE user_id='$user_id'");
     $conn->query("DELETE FROM categories WHERE user_id='$user_id'");
+    $conn->query("DELETE FROM api_user WHERE user_id='$user_id'"); // Hapus API key juga
     $conn->query("DELETE FROM users WHERE id='$user_id'");
     session_destroy();
     session_start();
@@ -153,6 +158,11 @@ if (isset($_GET['del_cat'])) {
         exit();
     }
 }
+
+// --- LOGIC 4: AMBIL DATA API KEY ---
+$q_api = $conn->query("SELECT api FROM api_user WHERE user_id='$user_id'");
+$api_data = $q_api->fetch_assoc();
+$existing_api_key = isset($api_data['api']) ? $api_data['api'] : null;
 
 $u_res = $conn_valselt->query("SELECT * FROM users WHERE id='$user_id'");
 $user_data = $u_res->fetch_assoc();
@@ -239,7 +249,55 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
             color: white;
             border-color: #4f46e5;
         }
-        
+
+        /* --- STYLE KHUSUS TAB DEVELOPER --- */
+        .api-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .api-label {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .api-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Loading Animation */
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .api-code-display {
+            font-family: 'Courier New', monospace;
+            background: #1e293b;
+            color: #22c55e;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin: 15px 0;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -281,21 +339,24 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
 
         <div class="card">
             <div class="tab-nav">
-                <button class="tab-btn <?php echo ($tab_active !== 'kategori') ? 'active' : ''; ?>" onclick="openTab(event, 'EditProfil')">
+                <button class="tab-btn <?php echo ($tab_active !== 'kategori' && $tab_active !== 'developer') ? 'active' : ''; ?>" onclick="openTab(event, 'EditProfil')">
                     <i class='bx bx-user'></i> Edit Profil
                 </button>
                 
                 <button class="tab-btn <?php echo ($tab_active === 'kategori') ? 'active' : ''; ?>" onclick="openTab(event, 'AturKategori')">
                     <i class='bx bx-layer'></i> Atur Kategori
                 </button>
+
+                <button class="tab-btn <?php echo ($tab_active === 'developer') ? 'active' : ''; ?>" onclick="openTab(event, 'Developer')">
+                    <i class='bx bx-code-alt'></i> Developer
+                </button>
             </div>
 
-            <div id="EditProfil" class="tab-content" style="display: <?php echo ($tab_active !== 'kategori') ? 'block' : 'none'; ?>;">
+            <div id="EditProfil" class="tab-content" style="display: <?php echo ($tab_active !== 'kategori' && $tab_active !== 'developer') ? 'block' : 'none'; ?>;">
                 <a href="https://valseltid.ivanaldorino.web.id/index.php" id="btn-valselt" class="btn btn-primary" target="_blank">
                     Edit Profil & Ganti Foto di Valselt ID <i class='bx bx-link-external'></i>
                 </a>
-                
-                </div>
+            </div>
 
             <div id="AturKategori" class="tab-content" style="display: <?php echo ($tab_active === 'kategori') ? 'block' : 'none'; ?>;">
                 <h3 style="margin-bottom:20px;">Kelola Kategori Transaksi</h3>
@@ -380,6 +441,52 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
                     </div>
                 </div>
             </div>
+
+            <div id="Developer" class="tab-content" style="display: <?php echo ($tab_active === 'developer') ? 'block' : 'none'; ?>;">
+                <h3 style="margin-bottom:20px;">Pengaturan Developer</h3>
+                <p style="color:#64748b; margin-bottom:20px;">Kelola kunci API untuk mengakses data Spencal Anda dari aplikasi pihak ketiga.</p>
+
+                <div class="api-row">
+                    <div class="api-label">
+                        <i class='bx bx-key' style="font-size:1.4rem; color:var(--primary);"></i>
+                        Kode API
+                    </div>
+                    
+                    <div class="api-input-wrapper">
+                        <input type="password" id="api_key_field" value="<?php echo $existing_api_key ? htmlspecialchars($existing_api_key) : ''; ?>" 
+                               readonly style="border:none; background:transparent; font-family:monospace; font-size:1rem; text-align:right; width: 200px; color:#1e293b;" 
+                               <?php echo $existing_api_key ? '' : 'hidden'; ?>>
+
+                        <?php if($existing_api_key): ?>
+                            <button type="button" id="btn-toggle-api" class="btn" style="background:#e2e8f0; color:#1e293b; width:auto; padding:10px 15px;" onclick="toggleApiKey()" title="Lihat/Sembunyikan">
+                                <i class='bx bx-show'></i>
+                            </button>
+
+                            <button type="button" id="btn-disable-api" class="btn" style="background:#fee2e2; color:#ef4444; width:auto; padding:10px 15px; margin-left:5px;" onclick="confirmDisableApi()" title="Nonaktifkan API">
+                                <i class='bx bx-trash'></i>
+                            </button>
+
+                            <button type="button" id="btn-enable-api" class="btn btn-primary" style="width:auto; padding:10px 15px; display:none;" onclick="enableApi()" title="Aktifkan API">
+                                <i class='bx bx-plus'></i>
+                            </button>
+
+                        <?php else: ?>
+                            <button type="button" id="btn-enable-api" class="btn btn-primary" style="width:auto; padding:10px 15px;" onclick="enableApi()" title="Aktifkan API">
+                                <i class='bx bx-plus'></i>
+                            </button>
+                            
+                            <button type="button" id="btn-toggle-api" class="btn" style="background:#e2e8f0; color:#1e293b; width:auto; padding:10px 15px; display:none;" onclick="toggleApiKey()">
+                                <i class='bx bx-show'></i>
+                            </button>
+
+                            <button type="button" id="btn-disable-api" class="btn" style="background:#fee2e2; color:#ef4444; width:auto; padding:10px 15px; margin-left:5px; display:none;" onclick="confirmDisableApi()">
+                                <i class='bx bx-trash'></i>
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 </div>
@@ -473,6 +580,36 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
             <a id="btn-confirm-delete-cat" href="#" class="popup-btn error" style="text-decoration:none; display:inline-block; text-align:center; line-height: normal; padding-top: 10px;">
                 Ya, Hapus
             </a>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" id="apiLoadingModal" style="display:none; opacity:0; transition: opacity 0.3s;">
+    <div class="popup-box">
+        <div id="api-loading-content">
+            <div class="loader-spinner"></div>
+            <h3 class="popup-title">Memproses...</h3>
+            <p class="popup-message">Sedang membuat kode API unik untuk Anda.</p>
+        </div>
+        
+        <div id="api-result-content" style="display:none;">
+            <div class="popup-icon-box success"><i class='bx bx-check'></i></div>
+            <h3 class="popup-title">Kode API Dibuat!</h3>
+            <p class="popup-message">Berikut adalah 16 digit kode API Anda:</p>
+            <div id="new-api-code-display" class="api-code-display"></div>
+            <button onclick="closeApiModal()" class="popup-btn success">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" id="disableApiModal" style="display:none; opacity:0; transition: opacity 0.3s;">
+    <div class="popup-box">
+        <div class="popup-icon-box warning"><i class='bx bx-error'></i></div>
+        <h3 class="popup-title">Nonaktifkan API?</h3>
+        <p class="popup-message">Aplikasi pihak ketiga yang menggunakan kode ini tidak akan bisa mengakses data Anda lagi.</p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeDisableApiModal()" class="popup-btn" style="background:#f1f5f9; color:#333;">Batal</button>
+            <button onclick="executeDisableApi()" class="popup-btn error">Ya, Nonaktifkan</button>
         </div>
     </div>
 </div>
@@ -1026,7 +1163,7 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = `chip-btn ${activeCategory === key ? 'active' : ''}`;
-            btn.innerText = categoryLabels[key] || key; // Pakai label mapping atau key asli
+            btn.innerText = categoryLabels[key] || key; 
             btn.onclick = () => { setActiveCategory(key); };
             chipsContainer.appendChild(btn);
         }
@@ -1034,17 +1171,13 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
 
     function setActiveCategory(cat) {
         activeCategory = cat;
-        renderCategoryChips(); // Re-render chips untuk update class active
+        renderCategoryChips(); 
         
-        // Reset search bar saat ganti kategori
         document.getElementById('iconSearchInput').value = '';
         
-        // Ambil input hidden value ikon yang terpilih saat ini
         const currentSelected = document.getElementById('edit_cat_icon_input').value;
-        renderIcons(currentSelected); // Render ulang grid
+        renderIcons(currentSelected); 
     }
-
-
 
     function renderIcons(selectedIcon, filterText = '') {
         const grid = document.getElementById('iconGrid');
@@ -1053,19 +1186,15 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
 
         let iconsToRender = [];
 
-        // Gabungkan array jika kategori 'all'
         if (activeCategory === 'all') {
             iconsToRender = Object.values(availableIcons).flat();
         } else {
             iconsToRender = availableIcons[activeCategory] || [];
         }
 
-        // --- FILTER PINTAR (SMART SEARCH) ---
-        // Mencari teks di dalam 'name' DAN 'tags'
         const lowerFilter = filterText.toLowerCase();
         
         const filteredIcons = iconsToRender.filter(item => {
-            // Jika item masih string lama (backward compatibility), ubah jadi object sementara
             const iconName = typeof item === 'string' ? item : item.name;
             const iconTags = typeof item === 'string' ? item : (item.tags || '');
 
@@ -1074,28 +1203,24 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         });
 
         if (filteredIcons.length === 0) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; font-size:0.8rem; padding:10px;">Ikon tidak ditemukan. Coba kata kunci lain (misal: "makan", "gaji").</div>';
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; font-size:0.8rem; padding:10px;">Ikon tidak ditemukan.</div>';
             return;
         }
 
         filteredIcons.forEach(item => {
-            // Handle jika data masih ada yang string
             const iconName = typeof item === 'string' ? item : item.name;
             const div = document.createElement('div');
             
             const isSelected = (iconName === selectedIcon); 
             div.className = `icon-option ${isSelected ? 'selected' : ''}`;
             
-            // Render Google Icons
             div.innerHTML = `<span class="material-symbols-rounded" style="font-size: 24px;">${iconName}</span>`;
-            
-            // Tampilkan tooltip nama saat hover (opsional)
             div.title = iconName;
             
             div.onclick = function() {
                 document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
                 div.classList.add('selected');
-                input.value = iconName; // Simpan nama ikonnya saja ke database
+                input.value = iconName; 
             };
             grid.appendChild(div);
         });
@@ -1105,7 +1230,6 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         const searchText = document.getElementById('iconSearchInput').value;
         const currentSelectedIcon = document.getElementById('edit_cat_icon_input').value;
         
-        // Jika sedang mencari, otomatis pindah ke kategori 'Semua' agar pencarian lebih luas
         if(searchText.length > 0 && activeCategory !== 'all') {
             activeCategory = 'all'; 
             renderCategoryChips();
@@ -1120,16 +1244,14 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         document.getElementById('edit_cat_type').value = type;
         document.getElementById('edit_cat_icon_input').value = icon;
         
-        // Reset UI
         document.getElementById('iconSearchInput').value = '';
-        activeCategory = 'all'; // Default balik ke semua atau bisa di deteksi dari icon kategori
+        activeCategory = 'all'; 
         
-        // Set Checkbox
         const scCheckbox = document.getElementById('edit_cat_shortcut');
         if(scCheckbox) scCheckbox.checked = (isShortcut == 1);
 
-        renderCategoryChips(); // Render Chips
-        renderIcons(icon);     // Render Grid
+        renderCategoryChips(); 
+        renderIcons(icon);     
 
         const modal = document.getElementById('editCatModal');
         modal.style.display = 'flex';
@@ -1142,13 +1264,16 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         setTimeout(() => modal.style.display = 'none', 300);
     }
 
-    // --- 1. DETEKSI UNSAVED CHANGES & INTERCEPT LINK ---
+    // --- 1. DETEKSI UNSAVED CHANGES ---
     let formChanged = false;
     let targetUrl = ''; 
-    const form = document.getElementById('profileForm');
+    const form = document.getElementById('profileForm'); // Note: Di prompt tidak ada ID profileForm, tapi logic ini ada di source Anda.
     
-    form.addEventListener('change', () => formChanged = true);
-    form.addEventListener('input', () => formChanged = true);
+    if(form) {
+        form.addEventListener('change', () => formChanged = true);
+        form.addEventListener('input', () => formChanged = true);
+        form.addEventListener('submit', () => formChanged = false);
+    }
 
     document.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', function(e) {
@@ -1170,8 +1295,6 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         }
     });
 
-    form.addEventListener('submit', () => formChanged = false);
-
     function showUnsavedModal() {
         const modal = document.getElementById('unsavedChangesModal');
         modal.style.display = 'flex';
@@ -1189,29 +1312,30 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         window.location.href = targetUrl;
     }
 
-
     // --- 2. LOGIC CROP IMAGE ---
     let cropper;
     const fileInput = document.getElementById('hidden-file-input');
     const imageToCrop = document.getElementById('image-to-crop');
     const cropModal = document.getElementById('cropModal');
 
-    fileInput.addEventListener('change', function(e) {
-        const files = e.target.files;
-        if (files && files.length > 0) {
-            const file = files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imageToCrop.src = e.target.result;
-                cropModal.style.display = 'flex';
-                setTimeout(() => cropModal.style.opacity = '1', 10);
-                if(cropper) cropper.destroy();
-                cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
-            };
-            reader.readAsDataURL(file);
-        }
-        this.value = null;
-    });
+    if(fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageToCrop.src = e.target.result;
+                    cropModal.style.display = 'flex';
+                    setTimeout(() => cropModal.style.opacity = '1', 10);
+                    if(cropper) cropper.destroy();
+                    cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
+                };
+                reader.readAsDataURL(file);
+            }
+            this.value = null;
+        });
+    }
 
     function cropImage() {
         const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
@@ -1219,11 +1343,15 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         const mainPreview = document.getElementById('main-preview');
         const placeholder = document.getElementById('main-preview-placeholder');
         
-        mainPreview.src = base64Image;
-        mainPreview.style.display = 'block';
+        if(mainPreview) {
+            mainPreview.src = base64Image;
+            mainPreview.style.display = 'block';
+        }
         if(placeholder) placeholder.style.display = 'none';
 
-        document.getElementById('cropped_image_data').value = base64Image;
+        const hiddenData = document.getElementById('cropped_image_data');
+        if(hiddenData) hiddenData.value = base64Image;
+        
         formChanged = true; 
         closeCropModal();
     }
@@ -1250,6 +1378,8 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         if(tabName === 'AturKategori') {
             newUrl.searchParams.set('tab', 'kategori');
             filterKategori();
+        } else if(tabName === 'Developer') {
+            newUrl.searchParams.set('tab', 'developer');
         } else {
             newUrl.searchParams.delete('tab');
             newUrl.searchParams.delete('type');
@@ -1282,9 +1412,7 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
     }
 
     function openDeleteCatModal(deleteUrl) {
-        // Set link tombol "Ya, Hapus" sesuai URL delete kategori yang diklik
         document.getElementById('btn-confirm-delete-cat').href = deleteUrl;
-        
         const modal = document.getElementById('deleteCatModal');
         modal.style.display = 'flex';
         setTimeout(() => modal.style.opacity = '1', 10);
@@ -1294,6 +1422,128 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         const modal = document.getElementById('deleteCatModal');
         modal.style.opacity = '0';
         setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    // --- LOGIC API DEVELOPER TAB ---
+    function enableApi() {
+        // 1. Muncul Popup Loading
+        const modal = document.getElementById('apiLoadingModal');
+        const loadingContent = document.getElementById('api-loading-content');
+        const resultContent = document.getElementById('api-result-content');
+        
+        loadingContent.style.display = 'block';
+        resultContent.style.display = 'none';
+        
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+
+        // 2. Fetch ke API
+        fetch('api_generate_key')
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    // Update Tampilan Popup Result
+                    loadingContent.style.display = 'none';
+                    resultContent.style.display = 'block';
+                    document.getElementById('new-api-code-display').innerText = data.api_code;
+
+                    // Update UI Tombol Enable jadi Eye
+                    const btnEnable = document.getElementById('btn-enable-api');
+                    const btnToggle = document.getElementById('btn-toggle-api');
+                    const inputField = document.getElementById('api_key_field');
+
+                    if(btnEnable) btnEnable.style.display = 'none';
+                    if(btnToggle) btnToggle.style.display = 'inline-flex';
+
+                    const btnDisable = document.getElementById('btn-disable-api');
+                    if(btnDisable) btnDisable.style.display = 'inline-flex';
+                    
+                    // Isi value ke input field (hidden) dan unhide
+                    if(inputField) {
+                        inputField.value = data.api_code;
+                        inputField.hidden = false;
+                    }
+                } else {
+                    alert('Gagal: ' + data.message);
+                    closeApiModal();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan koneksi.');
+                closeApiModal();
+            });
+    }
+
+    function closeApiModal() {
+        const modal = document.getElementById('apiLoadingModal');
+        modal.style.opacity = '0';
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function toggleApiKey() {
+        const input = document.getElementById('api_key_field');
+        const btn = document.getElementById('btn-toggle-api');
+        
+        if(input.type === "password") {
+            input.type = "text";
+            btn.innerHTML = "<i class='bx bx-hide'></i>";
+        } else {
+            input.type = "password";
+            btn.innerHTML = "<i class='bx bx-show'></i>";
+        }
+    }
+
+    // --- LOGIC DISABLE API ---
+    function confirmDisableApi() {
+        const modal = document.getElementById('disableApiModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+    }
+
+    function closeDisableApiModal() {
+        const modal = document.getElementById('disableApiModal');
+        modal.style.opacity = '0';
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function executeDisableApi() {
+        // Fetch ke API Delete (Tanpa .php sesuai request sebelumnya)
+        fetch('api_delete_key')
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    // Reset UI: Sembunyikan Mata & Sampah, Tampilkan Plus
+                    const btnEnable = document.getElementById('btn-enable-api');
+                    const btnToggle = document.getElementById('btn-toggle-api');
+                    const btnDisable = document.getElementById('btn-disable-api');
+                    const inputField = document.getElementById('api_key_field');
+
+                    // Manipulasi DOM
+                    if(btnEnable) btnEnable.style.display = 'inline-flex';
+                    if(btnToggle) btnToggle.style.display = 'none';
+                    if(btnDisable) btnDisable.style.display = 'none';
+                    
+                    // Kosongkan input field & sembunyikan
+                    if(inputField) {
+                        inputField.value = '';
+                        inputField.hidden = true;
+                        inputField.type = "password"; // Reset ke password type
+                        // Reset icon mata
+                        if(btnToggle) btnToggle.innerHTML = "<i class='bx bx-show'></i>";
+                    }
+
+                    closeDisableApiModal();
+                } else {
+                    alert('Gagal: ' + data.message);
+                    closeDisableApiModal();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan koneksi.');
+                closeDisableApiModal();
+            });
     }
 </script>
 
