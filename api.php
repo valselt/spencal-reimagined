@@ -1,5 +1,6 @@
 <?php
-// --- api.php (VERSION 6 - LOGO ADDED & SCREEN MESSAGE REMOVED) ---
+// --- api.php (VERSION 7 - RAW TOP EXPENSE AMOUNT) ---
+// Perbaikan: top_expense_amount sekarang menampilkan angka mentah (raw number).
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -120,7 +121,6 @@ $persen_terpakai = round($persen_terpakai, 1);
 $status_color_hex = "#22c55e"; // Default Hijau (Green)
 $status_text = "Aman";
 $alert_level = 0; // 0=Aman, 1=Warning, 2=Bahaya
-// Logika screen_message dihapus di sini
 
 if ($sisa_bisa_pakai_hari_ini < 0) {
     // KONDISI BAHAYA (Minus)
@@ -169,17 +169,14 @@ if($q_recent) {
 // 7. Format Output JSON
 $response = [
     "status" => "success",
-    // [BARU] Menambahkan Logo di root JSON
     "logo" => "https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png",
     "user" => [
         "username" => $username_display,
         "avatar" => $avatar_display
     ],
-    // Bagian ini KHUSUS untuk Hardware Control
     "device_ux" => [
         "led_hex" => $status_color_hex,
         "alert_level" => $alert_level,
-        // "screen_message" => DIHAPUS
         "is_negative" => ($sisa_bisa_pakai_hari_ini < 0)
     ],
     "highlight" => [
@@ -200,7 +197,8 @@ $response = [
         "total_keluar" => (float)$month_out,
         "cashflow_bersih" => (float)$saldo_bulan_ini,
         "top_expense_category" => $top_cat_name,
-        "top_expense_amount" => format_rupiah_singkat($top_cat_amount)
+        // PERUBAHAN DI SINI: Langsung keluarkan float murni, tanpa format string.
+        "top_expense_amount" => (float)$top_cat_amount 
     ],
     "assets" => [
         "total_savings" => (float)$total_savings,
@@ -210,7 +208,7 @@ $response = [
     "meta" => [
         "date_pulled" => $today,
         "time_pulled" => $now_time,
-        "api_ver" => "v6"
+        "api_ver" => "v7"
     ]
 ];
 
