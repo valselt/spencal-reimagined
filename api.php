@@ -1,6 +1,5 @@
 <?php
-// --- api.php (VERSION 4 - IOT EDITION) ---
-// Fitur: + Device UX Control (LED Color, Blink Speed, OLED Messages)
+// --- api.php (VERSION 6 - LOGO ADDED & SCREEN MESSAGE REMOVED) ---
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -16,6 +15,7 @@ function format_rupiah_singkat($angka) {
 }
 
 function format_full($angka) {
+    // Menghasilkan format: Rp 67.135
     return "Rp " . number_format($angka, 0, ',', '.');
 }
 
@@ -120,31 +120,27 @@ $persen_terpakai = round($persen_terpakai, 1);
 $status_color_hex = "#22c55e"; // Default Hijau (Green)
 $status_text = "Aman";
 $alert_level = 0; // 0=Aman, 1=Warning, 2=Bahaya
-$oled_message = "Keuangan Anda Sehat!";
+// Logika screen_message dihapus di sini
 
 if ($sisa_bisa_pakai_hari_ini < 0) {
     // KONDISI BAHAYA (Minus)
     $status_color_hex = "#ef4444"; // Merah
     $status_text = "Over!";
     $alert_level = 2; // Trigger alarm/blink cepat
-    $oled_message = "STOP JAJAN! Saldo Harian Minus " . format_rupiah_singkat(abs($sisa_bisa_pakai_hari_ini));
 
 } elseif ($persen_terpakai > 90) {
     // KONDISI KRITIS (90% ke atas)
     $status_color_hex = "#f97316"; // Oranye Tua
     $status_text = "Kritis";
     $alert_level = 1; // Trigger warning beep
-    $oled_message = "Hati-hati! Jatah sisa dikit lagi.";
 
 } elseif ($persen_terpakai > 75) {
     // KONDISI WARNING (75% ke atas)
     $status_color_hex = "#eab308"; // Kuning
     $status_text = "Siaga";
     $alert_level = 0;
-    $oled_message = "Pengeluaran lumayan besar hari ini.";
 } else {
     // AMAN
-    $oled_message = "Semangat Nabung, " . explode(' ', $username_display)[0] . "!";
 }
 
 // 6. Recent Transactions
@@ -173,15 +169,17 @@ if($q_recent) {
 // 7. Format Output JSON
 $response = [
     "status" => "success",
+    // [BARU] Menambahkan Logo di root JSON
+    "logo" => "https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png",
     "user" => [
         "username" => $username_display,
         "avatar" => $avatar_display
     ],
     // Bagian ini KHUSUS untuk Hardware Control
     "device_ux" => [
-        "led_hex" => $status_color_hex,        // Kirim ke WS2812B
-        "alert_level" => $alert_level,         // 0, 1, 2 (untuk logic buzzer/blink)
-        "screen_message" => $oled_message,     // Teks untuk marquee/scroll
+        "led_hex" => $status_color_hex,
+        "alert_level" => $alert_level,
+        // "screen_message" => DIHAPUS
         "is_negative" => ($sisa_bisa_pakai_hari_ini < 0)
     ],
     "highlight" => [
@@ -194,8 +192,8 @@ $response = [
         "limit_harian" => (float)$jatah_hari_ini,
         "pengeluaran" => (float)$daily_out,
         "pemasukan" => (float)$daily_in,
-        "limit_fmt" => format_rupiah_singkat($jatah_hari_ini),
-        "keluar_fmt" => format_rupiah_singkat($daily_out)
+        "limit_fmt" => format_full($jatah_hari_ini), 
+        "keluar_fmt" => format_full($daily_out)      
     ],
     "month_detail" => [
         "total_masuk" => (float)$month_in,
@@ -212,7 +210,7 @@ $response = [
     "meta" => [
         "date_pulled" => $today,
         "time_pulled" => $now_time,
-        "api_ver" => "v4"
+        "api_ver" => "v6"
     ]
 ];
 

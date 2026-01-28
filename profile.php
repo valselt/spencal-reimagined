@@ -273,6 +273,28 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
             align-items: center;
             gap: 10px;
         }
+
+        .fake-input {
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            text-align: right;
+            width: 100%;
+            color: #1e293b;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 5px;
+            /* Hilangkan Scrollbar tapi tetap bisa scroll */
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
+        }
+        .fake-input::-webkit-scrollbar { display: none; }
+        
+        /* Highlight Code */
+        .fake-input b {
+            color: #4f46e5;
+            font-weight: 800;
+        }
         /* Loading Animation */
         .loader-spinner {
             border: 4px solid #f3f3f3;
@@ -448,14 +470,16 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
 
                 <div class="api-row">
                     <div class="api-label">
-                        <i class='bx bx-key' style="font-size:1.4rem; color:var(--primary);"></i>
-                        Kode API
+                        <i class='bx bx-code-block' style="font-size:1.4rem; color:var(--primary);"></i>
+                        API Endpoint
                     </div>
                     
                     <div class="api-input-wrapper">
-                        <input type="password" id="api_key_field" value="<?php echo $existing_api_key ? htmlspecialchars($existing_api_key) : ''; ?>" 
-                               readonly style="border:none; background:transparent; font-family:monospace; font-size:1rem; text-align:right; width: 200px; color:#1e293b;" 
-                               <?php echo $existing_api_key ? '' : 'hidden'; ?>>
+                        <div id="api_display_area" class="fake-input">
+                            <?php echo $existing_api_key ? '••••••••••••••••••••••••••••••••' : ''; ?>
+                        </div>
+
+                        <input type="hidden" id="raw_api_key" value="<?php echo $existing_api_key ? htmlspecialchars($existing_api_key) : ''; ?>">
 
                         <?php if($existing_api_key): ?>
                             <button type="button" id="btn-toggle-api" class="btn" style="background:#e2e8f0; color:#1e293b; width:auto; padding:10px 15px;" onclick="toggleApiKey()" title="Lihat/Sembunyikan">
@@ -1424,45 +1448,42 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
         setTimeout(() => modal.style.display = 'none', 300);
     }
 
-    // --- LOGIC API DEVELOPER TAB ---
+    // --- LOGIC API DEVELOPER (FIXED DISPLAY) ---
+    const API_BASE_URL = "https://spencal.ivanaldorino.web.id/api?key=";
+
     function enableApi() {
-        // 1. Muncul Popup Loading
         const modal = document.getElementById('apiLoadingModal');
         const loadingContent = document.getElementById('api-loading-content');
         const resultContent = document.getElementById('api-result-content');
         
         loadingContent.style.display = 'block';
         resultContent.style.display = 'none';
-        
         modal.style.display = 'flex';
         setTimeout(() => modal.style.opacity = '1', 10);
 
-        // 2. Fetch ke API
         fetch('api_generate_key')
             .then(response => response.json())
             .then(data => {
                 if(data.status === 'success') {
-                    // Update Tampilan Popup Result
                     loadingContent.style.display = 'none';
                     resultContent.style.display = 'block';
                     document.getElementById('new-api-code-display').innerText = data.api_code;
 
-                    // Update UI Tombol Enable jadi Eye
+                    // Update UI
                     const btnEnable = document.getElementById('btn-enable-api');
                     const btnToggle = document.getElementById('btn-toggle-api');
-                    const inputField = document.getElementById('api_key_field');
+                    const btnDisable = document.getElementById('btn-disable-api');
+                    const rawInput = document.getElementById('raw_api_key');
+                    const displayArea = document.getElementById('api_display_area');
 
                     if(btnEnable) btnEnable.style.display = 'none';
                     if(btnToggle) btnToggle.style.display = 'inline-flex';
-
-                    const btnDisable = document.getElementById('btn-disable-api');
                     if(btnDisable) btnDisable.style.display = 'inline-flex';
                     
-                    // Isi value ke input field (hidden) dan unhide
-                    if(inputField) {
-                        inputField.value = data.api_code;
-                        inputField.hidden = false;
-                    }
+                    // Update Value
+                    if(rawInput) rawInput.value = data.api_code;
+                    // Reset Tampilan ke Dots
+                    if(displayArea) displayArea.innerHTML = '••••••••••••••••••••••••••••••••';
                 } else {
                     alert('Gagal: ' + data.message);
                     closeApiModal();
@@ -1482,19 +1503,22 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
     }
 
     function toggleApiKey() {
-        const input = document.getElementById('api_key_field');
+        const display = document.getElementById('api_display_area');
+        const rawKey = document.getElementById('raw_api_key').value;
         const btn = document.getElementById('btn-toggle-api');
         
-        if(input.type === "password") {
-            input.type = "text";
-            btn.innerHTML = "<i class='bx bx-hide'></i>";
-        } else {
-            input.type = "password";
+        // Cek apakah sedang menampilkan URL (mengandung http)
+        if(display.innerHTML.includes('http')) {
+            // Sembunyikan (Balik ke Dots)
+            display.innerHTML = '••••••••••••••••••••••••••••••••';
             btn.innerHTML = "<i class='bx bx-show'></i>";
+        } else {
+            // Tampilkan URL + Bold Key
+            display.innerHTML = API_BASE_URL + `<b>${rawKey}</b>`;
+            btn.innerHTML = "<i class='bx bx-hide'></i>";
         }
     }
 
-    // --- LOGIC DISABLE API ---
     function confirmDisableApi() {
         const modal = document.getElementById('disableApiModal');
         modal.style.display = 'flex';
@@ -1508,30 +1532,25 @@ $tab_active = isset($_GET['tab']) ? $_GET['tab'] : 'profil';
     }
 
     function executeDisableApi() {
-        // Fetch ke API Delete (Tanpa .php sesuai request sebelumnya)
         fetch('api_delete_key')
             .then(response => response.json())
             .then(data => {
                 if(data.status === 'success') {
-                    // Reset UI: Sembunyikan Mata & Sampah, Tampilkan Plus
                     const btnEnable = document.getElementById('btn-enable-api');
                     const btnToggle = document.getElementById('btn-toggle-api');
                     const btnDisable = document.getElementById('btn-disable-api');
-                    const inputField = document.getElementById('api_key_field');
+                    const rawInput = document.getElementById('raw_api_key');
+                    const displayArea = document.getElementById('api_display_area');
 
-                    // Manipulasi DOM
                     if(btnEnable) btnEnable.style.display = 'inline-flex';
                     if(btnToggle) btnToggle.style.display = 'none';
                     if(btnDisable) btnDisable.style.display = 'none';
                     
-                    // Kosongkan input field & sembunyikan
-                    if(inputField) {
-                        inputField.value = '';
-                        inputField.hidden = true;
-                        inputField.type = "password"; // Reset ke password type
-                        // Reset icon mata
-                        if(btnToggle) btnToggle.innerHTML = "<i class='bx bx-show'></i>";
-                    }
+                    if(rawInput) rawInput.value = '';
+                    if(displayArea) displayArea.innerHTML = ''; // Kosongkan saat disable
+                    
+                    // Reset icon mata
+                    if(btnToggle) btnToggle.innerHTML = "<i class='bx bx-show'></i>";
 
                     closeDisableApiModal();
                 } else {
