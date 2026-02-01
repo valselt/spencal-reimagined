@@ -2,6 +2,9 @@
 session_start();
 require 'config.php';
 
+// Load AWS Exception untuk menangani error upload
+use Aws\Exception\AwsException;
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php"); exit();
 }
@@ -12,6 +15,7 @@ $username = $_SESSION['username'];
 if (!isset($_GET['id'])) { header("Location: transactions.php"); exit(); }
 $trx_id = $_GET['id'];
 
+// Ambil data transaksi lama
 $stmt = $conn->prepare("SELECT t.*, c.type as cat_type FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.id = ? AND t.user_id = ?");
 $stmt->bind_param("ii", $trx_id, $user_id);
 $stmt->execute();
@@ -20,14 +24,74 @@ $data = $result->fetch_assoc();
 
 if (!$data) { header("Location: transactions.php?msg=error"); exit(); }
 
+// --- LOGIC UPDATE TRANSAKSI ---
 if (isset($_POST['update_transaksi'])) {
     $tgl = $_POST['tanggal'];
     $cat_id = $_POST['sub_jenis'];
     $note = htmlspecialchars($_POST['catatan']);
     $amount = str_replace('.', '', $_POST['total']); 
+    
+    // Status apakah foto lama dihapus user? (0 = tidak, 1 = ya)
+    $is_photo_deleted = $_POST['is_photo_deleted'] ?? 0;
 
-    $update_stmt = $conn->prepare("UPDATE transactions SET date=?, category_id=?, note=?, amount=? WHERE id=? AND user_id=?");
-    $update_stmt->bind_param("sissii", $tgl, $cat_id, $note, $amount, $trx_id, $user_id);
+    // Ambil URL foto lama dari database sebagai default
+    $final_photo_url = $data['photo_url'];
+
+    // 1. Jika user klik hapus foto di UI, set URL jadi NULL
+    if ($is_photo_deleted == '1') {
+        $final_photo_url = null;
+    }
+
+    // 2. Cek apakah ada file BARU yang diupload (Akan menimpa foto lama/null)
+    if (isset($_FILES['bukti_foto']) && $_FILES['bukti_foto']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['bukti_foto']['tmp_name'];
+        $fileName    = $_FILES['bukti_foto']['name'];
+        $fileNameCmps = explode(".", $fileName);
+        $fileExtension = strtolower(end($fileNameCmps));
+        $allowedfileExtensions = array('jpg', 'jpeg', 'png');
+        
+        if (in_array($fileExtension, $allowedfileExtensions)) {
+            // --- KONVERSI KE WEBP ---
+            $imageResource = null;
+            if ($fileExtension === 'jpg' || $fileExtension === 'jpeg') {
+                $imageResource = @imagecreatefromjpeg($fileTmpPath);
+            } elseif ($fileExtension === 'png') {
+                $imageResource = @imagecreatefrompng($fileTmpPath);
+                imagepalettetotruecolor($imageResource);
+                imagealphablending($imageResource, true);
+                imagesavealpha($imageResource, true);
+            }
+
+            if ($imageResource) {
+                ob_start();
+                imagewebp($imageResource, null, 80); 
+                $webpData = ob_get_contents();
+                ob_end_clean();
+                imagedestroy($imageResource);
+
+                // Upload ke S3
+                $newFileName = "photos/{$user_id}_" . time() . "_" . bin2hex(random_bytes(4)) . ".webp";
+                try {
+                    $result = $s3->putObject([
+                        'Bucket' => $s3_bucket,
+                        'Key'    => $newFileName,
+                        'Body'   => $webpData,
+                        'ACL'    => 'public-read',
+                        'ContentType' => 'image/webp'
+                    ]);
+                    $final_photo_url = $result['ObjectURL']; // Update dengan URL baru
+                } catch (AwsException $e) {
+                    // Error handle (opsional)
+                }
+            }
+        }
+    }
+
+    // 3. Update Database (Termasuk kolom photo_url)
+    // PERBAIKAN DI SINI: Tipe data diubah menjadi "sisssii"
+    // s (date string), i (cat_id), s (note), s (amount string), s (photo_url string), i (id), i (user_id)
+    $update_stmt = $conn->prepare("UPDATE transactions SET date=?, category_id=?, note=?, amount=?, photo_url=? WHERE id=? AND user_id=?");
+    $update_stmt->bind_param("sisssii", $tgl, $cat_id, $note, $amount, $final_photo_url, $trx_id, $user_id);
     
     if ($update_stmt->execute()) {
         header("Location: transactions.php?msg=updated");
@@ -48,8 +112,34 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
     
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
-    
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        /* --- COPY STYLE DARI INDEX.PHP UNTUK UPLOAD --- */
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-area:hover, .upload-area.dragover { border-color: #4f46e5; background: #eef2ff; }
+        .upload-placeholder { display: flex; flex-direction: column; align-items: center; color: #64748b; }
+        .upload-icon { font-size: 2.5rem; color: #4f46e5; margin-bottom: 10px; }
+        .upload-text { font-size: 0.9rem; font-weight: 500; }
+        .upload-limit { font-size: 0.75rem; color: #94a3b8; margin-top: 5px; }
+
+        .preview-container { display: none; position: relative; width: 100%; height: 100%; }
+        .preview-image { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .file-info { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .file-name { font-size: 0.85rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .btn-remove-file { background: #fee2e2; color: #ef4444; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; }
+        .btn-remove-file:hover { background: #fecaca; }
+    </style>
 </head>
 <body>
 
@@ -99,7 +189,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         </header>
 
         <div class="card" style="max-width: 600px;">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label class="form-label">Tanggal</label>
                     <input type="date" name="tanggal" class="form-control" required value="<?php echo $data['date']; ?>">
@@ -132,6 +222,33 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
                 <div class="form-group">
                     <label class="form-label">Catatan</label>
                     <input type="text" name="catatan" class="form-control" value="<?php echo htmlspecialchars($data['note']); ?>">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Edit Bukti Foto</label>
+                    
+                    <input type="hidden" name="is_photo_deleted" id="is_photo_deleted" value="0">
+                    
+                    <input type="file" name="bukti_foto" id="bukti_foto" class="hidden-input" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+                    
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('bukti_foto').click()">
+                        
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class='bx bx-cloud-upload upload-icon'></i>
+                            <span class="upload-text">Klik untuk ganti foto</span>
+                            <span class="upload-limit">JPG / PNG Only (Auto Convert WebP)</span>
+                        </div>
+
+                        <div class="preview-container" id="previewContainer">
+                            <img id="imgPreview" class="preview-image" src="">
+                            <div class="file-info" onclick="event.stopPropagation()">
+                                <span class="file-name" id="fileName">Foto Saat Ini</span>
+                                <button type="button" class="btn-remove-file" onclick="removeFile()">
+                                    <i class='bx bx-trash'></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:20px;">
@@ -173,12 +290,99 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         });
     }
 
+    // --- LOGIC MODERN UPLOAD (ADAPTASI DARI INDEX.PHP) ---
+    const existingPhotoUrl = "<?php echo $data['photo_url']; ?>";
+
     document.addEventListener("DOMContentLoaded", function() {
         const initialType = document.getElementById('initial_type').value;
         const initialCatId = document.getElementById('initial_cat_id').value;
         document.getElementById('jenis_transaksi').value = initialType;
         updateSubJenis(initialCatId);
+
+        // Logic tampilkan foto lama jika ada
+        if (existingPhotoUrl) {
+            showPreview(existingPhotoUrl, "Foto Tersimpan");
+        }
     });
+
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
+                alert("Format file tidak didukung! Harap upload JPG atau PNG.");
+                removeFile(); // Reset
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Set flag delete jadi 0 karena user upload baru
+                document.getElementById('is_photo_deleted').value = "0";
+                showPreview(e.target.result, file.name + " (Baru)");
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function showPreview(src, name) {
+        const placeholder = document.getElementById('uploadPlaceholder');
+        const previewContainer = document.getElementById('previewContainer');
+        const imgPreview = document.getElementById('imgPreview');
+        const fileName = document.getElementById('fileName');
+        const uploadArea = document.getElementById('uploadArea');
+
+        imgPreview.src = src;
+        fileName.innerText = name;
+        
+        placeholder.style.display = 'none';
+        previewContainer.style.display = 'block';
+        
+        uploadArea.style.borderStyle = 'solid';
+        uploadArea.style.borderColor = '#e2e8f0';
+        uploadArea.style.background = '#ffffff';
+        uploadArea.style.padding = '10px';
+    }
+
+    function removeFile() {
+        const input = document.getElementById('bukti_foto');
+        const placeholder = document.getElementById('uploadPlaceholder');
+        const previewContainer = document.getElementById('previewContainer');
+        const uploadArea = document.getElementById('uploadArea');
+
+        // Reset Input File
+        input.value = '';
+        
+        // Set Flag Delete = 1 (Artinya user ingin menghapus foto lama juga)
+        document.getElementById('is_photo_deleted').value = "1";
+
+        // Reset UI ke Placeholder
+        placeholder.style.display = 'flex';
+        previewContainer.style.display = 'none';
+        
+        uploadArea.style.borderStyle = 'dashed';
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = '#f8fafc';
+        uploadArea.style.padding = '30px 20px';
+    }
+
+    // Drag and Drop (Sama seperti index.php)
+    const dropArea = document.getElementById('uploadArea');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, function(e) { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
+    });
+    dropArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        document.getElementById('bukti_foto').files = files;
+        handleFileSelect(document.getElementById('bukti_foto'));
+    }, false);
 </script>
 
 </body>
