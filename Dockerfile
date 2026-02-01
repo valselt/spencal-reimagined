@@ -25,5 +25,7 @@ WORKDIR /var/www/html
 # 5. Copy Files
 COPY . /var/www/html/
 
+COPY php-custom.ini /usr/local/etc/php/conf.d/custom.ini
+
 # 7. Permissions
 RUN chown -R www-data:www-data /var/www/html
