@@ -164,7 +164,7 @@ if (isset($_POST['submit_transaksi'])) {
     
     if($stmt->execute()){
         $_SESSION['popup_status'] = 'success';
-        $_SESSION['popup_message'] = 'Transaksi disimpan & Foto dikonversi ke WebP!';
+        $_SESSION['popup_message'] = 'Transaksi disimpan';
     } else {
         $_SESSION['popup_status'] = 'error';
         $_SESSION['popup_message'] = 'Gagal menyimpan transaksi.';
@@ -586,6 +586,21 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 
         .btn-remove-file:hover {
             background: #fecaca;
+        }
+        /* --- LOADING SPINNER --- */
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5; /* Warna Primary */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -1170,6 +1185,24 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         handleFileSelect(input); // Trigger preview logic
     }
 
+    document.getElementById('transaksiForm').addEventListener('submit', function(e) {
+        // Cek validasi HTML5 dulu (required fields)
+        if (this.checkValidity()) {
+            // Jika valid, munculkan loading
+            const modal = document.getElementById('loadingModal');
+            modal.style.display = 'flex';
+            
+            // Sedikit delay biar transisi CSS jalan
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+
+            // Biarkan form submit secara alami ke PHP
+            // (Browser akan loading, popup tetap tampil sampai halaman refresh)
+        }
+        // Jika tidak valid, browser akan otomatis menampilkan pesan error di inputnya
+    });
+
     flatpickr(dateInput, {
         dateFormat: "Y-m-d",
         altInput: true,
@@ -1197,6 +1230,15 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         }
     });
 </script>
+
+<div class="popup-overlay" id="loadingModal" style="display:none; opacity:0; transition: opacity 0.3s;">
+    <div class="popup-box">
+        <div class="loader-spinner"></div>
+        <h3 class="popup-title">Memproses Transaksi...</h3>
+        <p class="popup-message">Sedang menyimpan data ke server.</p>
+        <small style="color: #94a3b8;">Mohon jangan tutup halaman ini.</small>
+    </div>
+</div>
 
 <?php include 'popupcustom.php'; ?>
 </body>
