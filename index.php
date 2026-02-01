@@ -72,7 +72,7 @@ $total_hari_bulan_ini = date('t');
 $hari_ini_angka = date('j'); 
 $sisa_hari = $total_hari_bulan_ini - $hari_ini_angka + 1; 
 
-// --- PROSES INPUT TRANSAKSI ---
+// --- HANDLE FORM SUBMIT TRANSAKSI ---
 if (isset($_POST['submit_transaksi'])) {
     $tgl = $_POST['tanggal'];
     $cat_id = $_POST['sub_jenis'];
@@ -86,54 +86,85 @@ if (isset($_POST['submit_transaksi'])) {
     if (isset($_FILES['bukti_foto']) && $_FILES['bukti_foto']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['bukti_foto']['tmp_name'];
         $fileName    = $_FILES['bukti_foto']['name'];
-        $fileSize    = $_FILES['bukti_foto']['size'];
-        $fileType    = $_FILES['bukti_foto']['type'];
         
         // Ambil ekstensi file
         $fileNameCmps = explode(".", $fileName);
         $fileExtension = strtolower(end($fileNameCmps));
 
-        // Validasi ekstensi
-        $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+        // Validasi: HANYA JPG & PNG yang boleh masuk
+        $allowedfileExtensions = array('jpg', 'jpeg', 'png');
         
         if (in_array($fileExtension, $allowedfileExtensions)) {
-            // Buat nama file unik: photos/USERID_TIMESTAMP_RANDOM.ext
-            $newFileName = "photos/{$user_id}_" . time() . "_" . bin2hex(random_bytes(4)) . "." . $fileExtension;
+            
+            // --- SISTEM KONVERSI KE WEBP ---
+            $imageResource = null;
 
-            try {
-                // Upload ke MinIO
-                $result = $s3->putObject([
-                    'Bucket' => $s3_bucket,
-                    'Key'    => $newFileName,
-                    'SourceFile' => $fileTmpPath,
-                    'ACL'    => 'public-read', // Agar bisa diakses publik via URL
-                    'ContentType' => $fileType
-                ]);
+            // A. Load Gambar ke Memory berdasarkan Tipe
+            if ($fileExtension === 'jpg' || $fileExtension === 'jpeg') {
+                $imageResource = @imagecreatefromjpeg($fileTmpPath);
+            } elseif ($fileExtension === 'png') {
+                $imageResource = @imagecreatefrompng($fileTmpPath);
+                // Pertahankan transparansi PNG saat convert
+                imagepalettetotruecolor($imageResource);
+                imagealphablending($imageResource, true);
+                imagesavealpha($imageResource, true);
+            }
 
-                // Ambil URL sukses
-                $photo_url = $result['ObjectURL'];
+            if ($imageResource) {
+                // B. Konversi ke WebP (In-Memory / Output Buffering)
+                ob_start();
+                // Quality 80 (Seimbang antara size & kualitas)
+                imagewebp($imageResource, null, 80); 
+                $webpData = ob_get_contents();
+                ob_end_clean();
+                
+                // Bersihkan memory
+                imagedestroy($imageResource);
 
-            } catch (AwsException $e) {
+                // C. Siapkan Nama File Baru (.webp)
+                $newFileName = "photos/{$user_id}_" . time() . "_" . bin2hex(random_bytes(4)) . ".webp";
+
+                try {
+                    // D. Upload Raw Data WebP ke MinIO
+                    $result = $s3->putObject([
+                        'Bucket' => $s3_bucket,
+                        'Key'    => $newFileName,
+                        'Body'   => $webpData, // Gunakan Body untuk upload string binary
+                        'ACL'    => 'public-read',
+                        'ContentType' => 'image/webp' // Set Header WebP
+                    ]);
+
+                    // Ambil URL sukses
+                    $photo_url = $result['ObjectURL'];
+
+                } catch (AwsException $e) {
+                    $_SESSION['popup_status'] = 'error';
+                    $_SESSION['popup_message'] = 'Gagal upload ke S3: ' . $e->getMessage();
+                    header("Location: index.php");
+                    exit();
+                }
+            } else {
                 $_SESSION['popup_status'] = 'error';
-                $_SESSION['popup_message'] = 'Gagal upload foto ke server: ' . $e->getMessage();
+                $_SESSION['popup_message'] = 'Gagal memproses gambar. Pastikan file tidak rusak.';
                 header("Location: index.php");
                 exit();
             }
+
         } else {
             $_SESSION['popup_status'] = 'warning';
-            $_SESSION['popup_message'] = 'Format foto tidak didukung (Gunakan JPG, PNG, WEBP).';
+            $_SESSION['popup_message'] = 'Format salah! Hanya menerima JPG atau PNG.';
             header("Location: index.php");
             exit();
         }
     }
 
-    // 2. Simpan ke Database (Update Query untuk menyertakan photo_url)
+    // 2. Simpan ke Database
     $stmt = $conn->prepare("INSERT INTO transactions (user_id, category_id, date, note, amount, photo_url) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("iissds", $user_id, $cat_id, $tgl, $note, $amount, $photo_url);
     
     if($stmt->execute()){
         $_SESSION['popup_status'] = 'success';
-        $_SESSION['popup_message'] = 'Transaksi berhasil disimpan!';
+        $_SESSION['popup_message'] = 'Transaksi disimpan & Foto dikonversi ke WebP!';
     } else {
         $_SESSION['popup_status'] = 'error';
         $_SESSION['popup_message'] = 'Gagal menyimpan transaksi.';
@@ -711,7 +742,7 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
                             <div class="upload-placeholder" id="uploadPlaceholder">
                                 <i class='bx bx-cloud-upload upload-icon'></i>
                                 <span class="upload-text">Klik atau tarik foto ke sini</span>
-                                <span class="upload-limit">JPG, PNG, WEBP (Max 5MB)</span>
+                                <span class="upload-limit">JPG / PNG Only (Auto Convert WebP)</span>
                             </div>
 
                             <div class="preview-container" id="previewContainer">
@@ -1052,19 +1083,23 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         const uploadArea = document.getElementById('uploadArea');
 
         if (file) {
-            // Validasi ukuran (opsional, contoh 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert("Ukuran file terlalu besar! Maksimal 5MB.");
+            // Validasi Tipe File (Hanya JPG/PNG)
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
+                alert("Format file tidak didukung! Harap upload JPG atau PNG.");
                 removeFile();
                 return;
             }
+
+            // Validasi Ukuran dihapus sesuai permintaan.
+            // (PHP server limit tetap berlaku, misal post_max_size di php.ini)
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 imgPreview.src = e.target.result;
                 placeholder.style.display = 'none';
                 previewContainer.style.display = 'block';
-                fileName.innerText = file.name;
+                fileName.innerText = file.name + " (Auto-convert to WebP)";
                 
                 // Ubah style border jadi solid saat ada file
                 uploadArea.style.borderStyle = 'solid';
