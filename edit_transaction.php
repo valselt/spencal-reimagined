@@ -88,8 +88,7 @@ if (isset($_POST['update_transaksi'])) {
     }
 
     // 3. Update Database (Termasuk kolom photo_url)
-    // PERBAIKAN DI SINI: Tipe data diubah menjadi "sisssii"
-    // s (date string), i (cat_id), s (note), s (amount string), s (photo_url string), i (id), i (user_id)
+    // Tipe data: "sisssii" -> s(date), i(cat), s(note), s(amount), s(photo), i(id), i(user)
     $update_stmt = $conn->prepare("UPDATE transactions SET date=?, category_id=?, note=?, amount=?, photo_url=? WHERE id=? AND user_id=?");
     $update_stmt->bind_param("sisssii", $tgl, $cat_id, $note, $amount, $final_photo_url, $trx_id, $user_id);
     
@@ -139,6 +138,21 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         .file-name { font-size: 0.85rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
         .btn-remove-file { background: #fee2e2; color: #ef4444; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; }
         .btn-remove-file:hover { background: #fecaca; }
+
+        /* --- LOADING SPINNER --- */
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5; /* Warna Primary */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -189,7 +203,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         </header>
 
         <div class="card" style="max-width: 600px;">
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" enctype="multipart/form-data" id="editForm">
                 <div class="form-group">
                     <label class="form-label">Tanggal</label>
                     <input type="date" name="tanggal" class="form-control" required value="<?php echo $data['date']; ?>">
@@ -260,6 +274,15 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
     </main>
 </div>
 
+<div class="popup-overlay" id="loadingModal" style="display:none; opacity:0; transition: opacity 0.3s;">
+    <div class="popup-box">
+        <div class="loader-spinner"></div>
+        <h3 class="popup-title">Menyimpan Perubahan...</h3>
+        <p class="popup-message">Sedang mengompres foto dan menyimpan data ke server.</p>
+        <small style="color: #94a3b8;">Mohon jangan tutup halaman ini.</small>
+    </div>
+</div>
+
 <script>
     function formatRupiah(element) {
         let value = element.value.replace(/[^,\d]/g, '').toString();
@@ -290,7 +313,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         });
     }
 
-    // --- LOGIC MODERN UPLOAD (ADAPTASI DARI INDEX.PHP) ---
+    // --- LOGIC MODERN UPLOAD & LOADING ---
     const existingPhotoUrl = "<?php echo $data['photo_url']; ?>";
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -302,6 +325,15 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         // Logic tampilkan foto lama jika ada
         if (existingPhotoUrl) {
             showPreview(existingPhotoUrl, "Foto Tersimpan");
+        }
+    });
+
+    // --- LOGIC LOADING SAAT SUBMIT ---
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            const modal = document.getElementById('loadingModal');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.style.opacity = '1'; }, 10);
         }
     });
 
@@ -366,7 +398,7 @@ $cats_pengeluaran = $conn->query("SELECT * FROM categories WHERE user_id='$user_
         uploadArea.style.padding = '30px 20px';
     }
 
-    // Drag and Drop (Sama seperti index.php)
+    // Drag and Drop Logic
     const dropArea = document.getElementById('uploadArea');
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropArea.addEventListener(eventName, function(e) { e.preventDefault(); e.stopPropagation(); }, false);
