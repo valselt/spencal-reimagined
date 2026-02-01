@@ -190,10 +190,16 @@ $result = $conn->query($query);
                                         Rp <?php echo number_format($row['amount'], 0, ',', '.'); ?>
                                     </td>
                                     <td class="action-cell">
+                                        <?php if(!empty($row['photo_url'])): ?>
+                                            <a href="<?php echo htmlspecialchars($row['photo_url']); ?>" target="_blank" class="btn-action" style="color: #6366f1; background: #e0e7ff;" title="Lihat Foto">
+                                                <i class='bx bx-image'></i>
+                                            </a>
+                                        <?php endif; ?>
+
                                         <a href="edit_transaction.php?id=<?php echo $row['id']; ?>" class="btn-action btn-edit" title="Edit">
                                             <i class='bx bx-pencil'></i>
                                         </a>
-                                        <a href="transactions.php?delete_id=<?php echo $row['id']; ?>" class="btn-action btn-delete" title="Hapus" onclick="return confirm('Yakin ingin menghapus transaksi ini? Data akan hilang permanen.')">
+                                        <a href="transactions.php?delete_id=<?php echo $row['id']; ?>" class="btn-action btn-delete" title="Hapus" onclick="return confirm('Yakin?')">
                                             <i class='bx bx-trash'></i>
                                         </a>
                                     </td>

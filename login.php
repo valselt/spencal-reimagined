@@ -1,8 +1,18 @@
 <?php
 // Setting Session
-$durasi_session = 90 * 24 * 60 * 60; 
+$durasi_session = 90 * 24 * 60 * 60; // 90 Hari
+
+// Paksa pengaturan Cookie agar diterima oleh Android/iOS PWA
+session_set_cookie_params([
+    'lifetime' => $durasi_session,
+    'path' => '/',
+    'domain' => '', // Biarkan kosong agar otomatis ikut domain saat ini
+    'secure' => true, // PENTING: Paksa true meskipun di docker jalan di HTTP
+    'httponly' => true, // Mencegah Javascript mengambil cookie (XSS protection)
+    'samesite' => 'Lax' // Agar cookie tetap dikirim saat navigasi normal
+]);
+
 ini_set('session.gc_maxlifetime', $durasi_session);
-session_set_cookie_params($durasi_session);
 
 require 'config.php'; // DB Lokal
 require 'Valselt.php'; // SDK

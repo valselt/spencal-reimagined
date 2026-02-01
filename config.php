@@ -1,4 +1,13 @@
 <?php
+
+if (isset($_SERVER['HTTP_CF_VISITOR']) || isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+    if (
+        (isset($_SERVER['HTTP_CF_VISITOR']) && strpos($_SERVER['HTTP_CF_VISITOR'], 'https') !== false) ||
+        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
+    ) {
+        $_SERVER['HTTPS'] = 'on';
+    }
+}
 // Ambil timezone dari env, default ke Asia/Jakarta jika tidak ada
 $timezone = getenv('APP_TIMEZONE') ?: 'Asia/Jakarta';
 date_default_timezone_set($timezone);
@@ -13,6 +22,10 @@ function getEnvVar($key, $default = '') {
     return $value !== false ? $value : $default;
 }
 
+require 'vendor/autoload.php'; // Pastikan Autoload Composer dimuat
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
+
 // 1. Database Credentials
 $db_host = getEnvVar('DB_HOST', 'mariadb');
 $db_port = getEnvVar('DB_PORT', 3306); // Port default jika env kosong
@@ -22,6 +35,30 @@ $db_pass = getEnvVar('DB_PASS'); // Password tidak ada default demi keamanan
 // DB NAMES
 $db_spencal = getEnvVar('DB_NAME_SPENCAL', 'spencal_reimagined');
 $db_valselt = getEnvVar('DB_NAME_VALSELT', 'valselt_id');
+
+// ==========================================
+// KONEKSI S3 MINIO
+// ==========================================
+$s3_endpoint = getEnvVar('S3_ENDPOINT', 'https://cdn.ivanaldorino.web.id');
+$s3_key      = getEnvVar('S3_ACCESS_KEY', 'admin');
+$s3_secret   = getEnvVar('S3_SECRET_KEY', 'aldorino04');
+$s3_bucket   = getEnvVar('S3_BUCKET', 'spencal');
+$s3_region   = getEnvVar('S3_REGION', 'us-east-1');
+
+try {
+    $s3 = new S3Client([
+        'version' => 'latest',
+        'region'  => $s3_region,
+        'endpoint' => $s3_endpoint,
+        'use_path_style_endpoint' => true, // Wajib true untuk MinIO
+        'credentials' => [
+            'key'    => $s3_key,
+            'secret' => $s3_secret,
+        ],
+    ]);
+} catch (Exception $e) {
+    // S3 Error (Optional: Log error)
+}
 
 // ==========================================
 // KONEKSI & HELPER

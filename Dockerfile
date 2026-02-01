@@ -1,5 +1,7 @@
 FROM php:8.2-apache
 
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 # 1. Install System Dependencies & GD Library (untuk WebP)
 RUN apt-get update && apt-get install -y \
     libpng-dev \

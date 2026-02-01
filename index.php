@@ -1,4 +1,16 @@
 <?php
+
+$durasi_session = 90 * 24 * 60 * 60;
+session_set_cookie_params([
+    'lifetime' => $durasi_session,
+    'path' => '/',
+    'domain' => '',
+    'secure' => true, // Wajib true untuk Cloudflare/HTTPS
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+ini_set('session.gc_maxlifetime', $durasi_session);
+
 session_start();
 require 'config.php';
 
@@ -66,9 +78,58 @@ if (isset($_POST['submit_transaksi'])) {
     $cat_id = $_POST['sub_jenis'];
     $note = htmlspecialchars($_POST['catatan']);
     $amount = str_replace('.', '', $_POST['total']); 
+    
+    // Default foto null
+    $photo_url = null;
 
-    $stmt = $conn->prepare("INSERT INTO transactions (user_id, category_id, date, note, amount) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("iissd", $user_id, $cat_id, $tgl, $note, $amount);
+    // 1. Cek apakah ada file yang diupload
+    if (isset($_FILES['bukti_foto']) && $_FILES['bukti_foto']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['bukti_foto']['tmp_name'];
+        $fileName    = $_FILES['bukti_foto']['name'];
+        $fileSize    = $_FILES['bukti_foto']['size'];
+        $fileType    = $_FILES['bukti_foto']['type'];
+        
+        // Ambil ekstensi file
+        $fileNameCmps = explode(".", $fileName);
+        $fileExtension = strtolower(end($fileNameCmps));
+
+        // Validasi ekstensi
+        $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+        
+        if (in_array($fileExtension, $allowedfileExtensions)) {
+            // Buat nama file unik: photos/USERID_TIMESTAMP_RANDOM.ext
+            $newFileName = "photos/{$user_id}_" . time() . "_" . bin2hex(random_bytes(4)) . "." . $fileExtension;
+
+            try {
+                // Upload ke MinIO
+                $result = $s3->putObject([
+                    'Bucket' => $s3_bucket,
+                    'Key'    => $newFileName,
+                    'SourceFile' => $fileTmpPath,
+                    'ACL'    => 'public-read', // Agar bisa diakses publik via URL
+                    'ContentType' => $fileType
+                ]);
+
+                // Ambil URL sukses
+                $photo_url = $result['ObjectURL'];
+
+            } catch (AwsException $e) {
+                $_SESSION['popup_status'] = 'error';
+                $_SESSION['popup_message'] = 'Gagal upload foto ke server: ' . $e->getMessage();
+                header("Location: index.php");
+                exit();
+            }
+        } else {
+            $_SESSION['popup_status'] = 'warning';
+            $_SESSION['popup_message'] = 'Format foto tidak didukung (Gunakan JPG, PNG, WEBP).';
+            header("Location: index.php");
+            exit();
+        }
+    }
+
+    // 2. Simpan ke Database (Update Query untuk menyertakan photo_url)
+    $stmt = $conn->prepare("INSERT INTO transactions (user_id, category_id, date, note, amount, photo_url) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("iissds", $user_id, $cat_id, $tgl, $note, $amount, $photo_url);
     
     if($stmt->execute()){
         $_SESSION['popup_status'] = 'success';
@@ -400,6 +461,101 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         .flatpickr-today-btn:hover {
             background: #6a62c5 !important; /* Sedikit lebih gelap saat hover */
         }
+
+        /* --- MODERN UPLOAD STYLE --- */
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary);
+            background: #eef2ff;
+        }
+
+        .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .upload-limit {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+
+        /* Preview Image Style */
+        .preview-container {
+            display: none; /* Hidden by default */
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .file-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .btn-remove-file {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-remove-file:hover {
+            background: #fecaca;
+        }
     </style>
 </head>
 <body>
@@ -514,7 +670,7 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         <div class="input-section">
             <div class="card">
                 <h2 class="card-title"><i class='bx bx-plus-circle'></i> Input Transaksi</h2>
-                <form method="POST" id="transaksiForm">
+                <form method="POST" id="transaksiForm" enctype="multipart/form-data">
                     <div class="form-group">
                         <label class="form-label">Tanggal</label>
                         <input type="text" name="tanggal" class="form-control" required placeholder="Pilih Tanggal...">
@@ -543,6 +699,30 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
                     <div class="form-group">
                         <label class="form-label">Catatan</label>
                         <input type="text" name="catatan" class="form-control" placeholder="Contoh: Makan Siang">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bukti Foto (Opsional)</label>
+                        
+                        <input type="file" name="bukti_foto" id="bukti_foto" class="hidden-input" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+                        
+                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('bukti_foto').click()">
+                            
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <i class='bx bx-cloud-upload upload-icon'></i>
+                                <span class="upload-text">Klik atau tarik foto ke sini</span>
+                                <span class="upload-limit">JPG, PNG, WEBP (Max 5MB)</span>
+                            </div>
+
+                            <div class="preview-container" id="previewContainer">
+                                <img id="imgPreview" class="preview-image">
+                                <div class="file-info" onclick="event.stopPropagation()"> <span class="file-name" id="fileName">nama_file.jpg</span>
+                                    <button type="button" class="btn-remove-file" onclick="removeFile()">
+                                        <i class='bx bx-trash'></i> Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <button type="submit" name="submit_transaksi" class="btn btn-primary">Simpan Transaksi</button>
@@ -861,6 +1041,99 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
 
     // Ambil elemen input tanggal
     const dateInput = document.querySelector("input[name='tanggal']");
+
+    // --- LOGIC MODERN UPLOAD ---
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        const placeholder = document.getElementById('uploadPlaceholder');
+        const previewContainer = document.getElementById('previewContainer');
+        const imgPreview = document.getElementById('imgPreview');
+        const fileName = document.getElementById('fileName');
+        const uploadArea = document.getElementById('uploadArea');
+
+        if (file) {
+            // Validasi ukuran (opsional, contoh 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Ukuran file terlalu besar! Maksimal 5MB.");
+                removeFile();
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imgPreview.src = e.target.result;
+                placeholder.style.display = 'none';
+                previewContainer.style.display = 'block';
+                fileName.innerText = file.name;
+                
+                // Ubah style border jadi solid saat ada file
+                uploadArea.style.borderStyle = 'solid';
+                uploadArea.style.borderColor = '#e2e8f0';
+                uploadArea.style.background = '#ffffff';
+                uploadArea.style.padding = '10px';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removeFile() {
+        const input = document.getElementById('bukti_foto');
+        const placeholder = document.getElementById('uploadPlaceholder');
+        const previewContainer = document.getElementById('previewContainer');
+        const uploadArea = document.getElementById('uploadArea');
+
+        // Reset Input
+        input.value = '';
+        
+        // Reset UI
+        placeholder.style.display = 'flex';
+        previewContainer.style.display = 'none';
+        
+        // Kembalikan style awal
+        uploadArea.style.borderStyle = 'dashed';
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = '#f8fafc';
+        uploadArea.style.padding = '30px 20px';
+    }
+
+    // Drag and Drop Effects
+    const dropArea = document.getElementById('uploadArea');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropArea.classList.add('dragover');
+    }
+
+    function unhighlight(e) {
+        dropArea.classList.remove('dragover');
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        const input = document.getElementById('bukti_foto');
+        
+        input.files = files; // Assign drop file ke input
+        handleFileSelect(input); // Trigger preview logic
+    }
 
     flatpickr(dateInput, {
         dateFormat: "Y-m-d",
