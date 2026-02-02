@@ -60,10 +60,28 @@ $result = $conn->query($query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Riwayat Transaksi - Spencal</title>
-    <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png" type="image/png">
+    <link rel="icon" href="https://cdn.ivanaldorino.web.id/spencal/spencal_favicon.png  " type="image/png">
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css  ' rel='stylesheet'>
     <style>
+        /* --- CSS TAMBAHAN UNTUK DESKTOP --- */
+        @media (min-width: 769px) {
+            /* Menambahkan gap dan merapikan tombol aksi pada tampilan desktop */
+            .td-action {
+                display: flex !important;
+                justify-content: flex-start; /* atau center jika ingin ditengahkan */
+                align-items: center;
+                gap: 8px; /* Menambahkan jarak antar tombol */
+            }
+
+            .btn-action {
+                display: inline-flex; /* Menggunakan flex untuk centering isi tombol */
+                align-items: center;
+                justify-content: center;
+                margin: 0; /* Reset margin jika ada */
+            }
+        }
+
         /* --- CSS RESET KHUSUS MOBILE --- */
         @media (max-width: 768px) {
             /* 1. Paksa Body & HTML tidak melebihi layar */
@@ -194,7 +212,7 @@ $result = $conn->query($query);
                 display: flex !important;
                 flex-direction: row !important; /* Paksa Sejajar */
                 justify-content: flex-end; /* Rata Kanan */
-                gap: 8px;
+                gap: 8px; /* Jarak antar tombol */
             }
 
             /* Perbesar tombol sedikit agar mudah disentuh */
@@ -317,6 +335,7 @@ $result = $conn->query($query);
                                     </td>
                                     
                                     <td class="td-action">
+                                        <!-- Tombol Urutan: Image, Edit, Delete -->
                                         <?php if(!empty($row['photo_url'])): ?>
                                             <a href="<?php echo htmlspecialchars($row['photo_url']); ?>" target="_blank" class="btn-action" style="color: #6366f1;" title="Lihat Foto">
                                                 <i class='bx bx-image'></i>
