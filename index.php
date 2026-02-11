@@ -352,17 +352,32 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
             overflow: hidden; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; 
             border: 1px solid #e2e8f0 !important;
-            width: auto !important; 
-            min-width: 300px; /* Opsional: Biar gak kekecilan */
+            
+            /* GANTI BAGIAN INI: */
+            width: 308px !important;  /* Paksa lebar pas untuk 7 kolom (44px * 7) */
+            max-width: 308px !important; 
+            
             z-index: 999 !important;
         }
 
+        /* TAMBAHKAN CLASS INI AGAR CONTAINER HARI MENGIKUTI LEBARNYA */
+        .flatpickr-days {
+            width: 308px !important;
+        }
+        
+        .dayContainer {
+            width: 308px !important;
+            min-width: 308px !important;
+            max-width: 308px !important;
+            justify-content: center; /* Pastikan rata tengah */
+        }
+
         .form-group .flatpickr-calendar {
-            top: 100% !important;       /* Paksa posisi tepat di bawah input */
-            left: 0 !important;         /* Rata kiri dengan input */
-            right: auto !important;     /* Reset kanan */
-            transform: none !important; /* Matikan efek transform bawaan yg bikin lari */
-            margin-top: 5px;            /* Beri jarak sedikit biar rapi */
+            top: 100% !important;       
+            left: 0 !important;         
+            right: auto !important;     
+            transform: none !important; 
+            margin-top: 5px;            
         }
 
         /* 2. Header Bulan (Bagian Atas) */
@@ -1207,16 +1222,19 @@ $shortcuts = $conn->query("SELECT * FROM categories WHERE user_id='$user_id' AND
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "l, j F Y",
-        locale: "id",
+        
+        // --- UBAH BAGIAN INI ---
+        locale: {
+            ...flatpickr.l10ns.id, // Mengambil semua pengaturan Bahasa Indonesia
+            firstDayOfWeek: 0      // 0 = Minggu, 1 = Senin. Kita paksa jadi 0.
+        },
+        // -----------------------
+
         defaultDate: "today",
         animate: true,
         disableMobile: "true",
         
-        // --- PERBAIKAN SCROLLING ---
-        // Tempelkan kalender ke elemen pembungkus input (.form-group)
-        // Agar saat discroll, kalender ikut bergerak bersama inputnya
         appendTo: dateInput.parentElement,
-        // ---------------------------
 
         onReady: function(selectedDates, dateStr, instance) {
             const todayBtn = document.createElement("div");

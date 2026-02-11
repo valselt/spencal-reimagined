@@ -27,23 +27,23 @@ use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
 // 1. Database Credentials
-$db_host = getEnvVar('DB_HOST', 'mariadb');
+$db_host = getEnvVar('DB_HOST');
 $db_port = getEnvVar('DB_PORT', 3306); // Port default jika env kosong
-$db_user = getEnvVar('DB_USER', 'root');
+$db_user = getEnvVar('DB_USER');
 $db_pass = getEnvVar('DB_PASS'); // Password tidak ada default demi keamanan
 
 // DB NAMES
-$db_spencal = getEnvVar('DB_NAME_SPENCAL', 'spencal_reimagined');
-$db_valselt = getEnvVar('DB_NAME_VALSELT', 'valselt_id');
+$db_spencal = getEnvVar('DB_NAME_SPENCAL');
+$db_valselt = getEnvVar('DB_NAME_VALSELT');
 
 // ==========================================
 // KONEKSI S3 MINIO
 // ==========================================
-$s3_endpoint = getEnvVar('S3_ENDPOINT', 'https://cdn.ivanaldorino.web.id');
-$s3_key      = getEnvVar('S3_ACCESS_KEY', 'admin');
-$s3_secret   = getEnvVar('S3_SECRET_KEY', 'aldorino04');
-$s3_bucket   = getEnvVar('S3_BUCKET', 'spencal');
-$s3_region   = getEnvVar('S3_REGION', 'us-east-1');
+$s3_endpoint = getEnvVar('S3_ENDPOINT');
+$s3_key      = getEnvVar('S3_ACCESS_KEY');
+$s3_secret   = getEnvVar('S3_SECRET_KEY');
+$s3_bucket   = getEnvVar('S3_BUCKET');
+$s3_region   = getEnvVar('S3_REGION');
 
 try {
     $s3 = new S3Client([
